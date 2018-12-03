@@ -8,8 +8,10 @@ import tweepy
 from twitter_auth import *
 import pandas as pd
 
+DATA_DIR = os.path.join(os.getcwd(),'uploads')
+
 app = Flask(__name__)
-app.config['UPLOADED_TWEETIDS_DEST'] = os.path.join(os.getcwd(),'uploads')
+app.config['UPLOADED_TWEETIDS_DEST'] = DATA_DIR
 app.config['SECRET_KEY']='tweeterviewer'
 
 ## --------- Image Uploading Block --------- ##
@@ -47,6 +49,9 @@ def upload_file():
     tweets = []
 
     if file_url is not None:
+        # Read file from the drive to avoid issues with MAC
+        file_url = os.path.join(DATA_DIR,file_url.split('/')[-1])
+        print(file_url)
         df = pd.read_csv(file_url)
         for r,i in df.iterrows():
             if 'ID_' in i.tweet_id_str:
