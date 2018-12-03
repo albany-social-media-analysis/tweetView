@@ -8,6 +8,7 @@ To install:
 To run
   - edit twitter_auth.py with appropriate details
   - 'cd tweetView'
+  - activate the conda environment
   - python3 app.py
   
 open a web browser and navigate to: http://127.0.0.1:5000/
