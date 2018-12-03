@@ -1,0 +1,10 @@
+{% extends "index.html" %}
+
+{% block tweets %}
+<div class='container' id='displayTweets'>
+  {% for tweet in tweets %}
+    <hr>
+        {{ tweet.html | safe}}
+  {% endfor %}
+</div>
+{% endblock %}

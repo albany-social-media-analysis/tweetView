@@ -1,0 +1,74 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+    <script>window.twttr = (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0],
+        t = window.twttr || {};
+      if (d.getElementById(id)) return t;
+      js = d.createElement(s);
+      js.id = id;
+      js.src = "https://platform.twitter.com/widgets.js";
+      fjs.parentNode.insertBefore(js, fjs);
+
+      t._e = [];
+      t.ready = function(f) {
+        t._e.push(f);
+      };
+
+      return t;
+    }(document, "script", "twitter-wjs"));</script>
+
+    <style>
+      body {
+        min-height: 45rem;
+        padding-top: 4.5rem;
+      }
+    </style>
+  </head>
+
+  <body>
+    <script>
+      function embedTweet(tweetId) {
+        var div = document.createElement('div');
+        div.setAttribute("id",tweetId);
+
+        twttr.widgets.createTweet(
+          tweetId,
+          document.getElementById(tweetId),
+          {
+            theme: 'light'
+          }
+        );
+      };
+    </script>
+    <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+
+    <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+      <a class="navbar-brand" href="#">Tweet Viewer</a>
+    </nav>
+
+    <div class = container>
+    <h1>Upload Tweet IDs</h1>
+        <form method="POST" enctype="multipart/form-data">
+          {{ form.hidden_tag() }}
+          {{ form.tweetids }}
+          {{ form.submit }}
+          {% if file_url %}
+            {% for error in form.tweetids.errors %}
+              <span style="color: red;">{{ error }}</span>
+            {% endfor %}
+          {% endif %}
+        </form>
+      </div>
+
+  {% block info %}  {% endblock %}
+
+  {% block tweets %}  {% endblock %}
+
+  </body>
+</html>
