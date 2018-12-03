@@ -6,7 +6,7 @@ To install:
   - 'conda env create -f environment.yml'
 
 To run
-  - edit twitter_auth with appropriate details
+  - edit twitter_auth.py with appropriate details
   - 'cd tweetView'
   - python3 app.py
   
