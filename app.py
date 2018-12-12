@@ -51,7 +51,7 @@ def upload_file():
     if file_url is not None:
         # Read file from the drive to avoid issues with MAC
         file_url = os.path.join(DATA_DIR,file_url.split('/')[-1])
-        print(file_url)
+
         df = pd.read_csv(file_url)
         for r,i in df.iterrows():
             if 'ID_' in i.tweet_id_str:

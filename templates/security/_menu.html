@@ -1,0 +1,19 @@
+<div class='container'>
+  <div class="row align-items-center justify-content-center">
+    {% if security.registerable or security.recoverable or security.confirmable %}
+      <a href="{{ url_for_security('login') }}{% if 'next' in request.args %}?next={{ request.args.next|urlencode }}{% endif %}">{{ _('Login') }}</a>
+      {% if security.registerable %}
+      <font> | </font>
+        <a href="{{ url_for_security('register') }}{% if 'next' in request.args %}?next={{ request.args.next|urlencode }}{% endif %}">{{ _('Register') }}</a><br/>
+      {% endif %}
+      {% if security.recoverable %}
+      <font> | </font>
+        <a href="{{ url_for_security('forgot_password') }}">{{ _('Forgot password') }}</a><br/>
+      {% endif %}
+      {% if security.confirmable %}
+        <font> | </font>
+        <a href="{{ url_for_security('send_confirmation') }}">{{ _('Confirm account') }}</a>
+      {% endif %}
+    {% endif %}
+  </div>
+</div>

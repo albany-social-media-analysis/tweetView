@@ -1,10 +1,7 @@
-{% extends "index.html" %}
-
-{% block tweets %}
-<div class='container' id='displayTweets'>
-  {% for tweet in tweets %}
-    <hr>
-        {{ tweet.html | safe}}
-  {% endfor %}
-</div>
-{% endblock %}
+{% macro display_tweet_form(placeholder, curr_id) %}
+<form action="{{ url_for('get_next_tweet') }}" method="POST">
+  <textarea class="form-control" rows="5" name="comment" placeholder="{{ placeholder }}"></textarea>
+  <input type='submit' class='btn btn-primary' value="previous" name="{{ curr_id }}">
+  <input type='submit' class='btn btn-primary' value="next" name="{{ curr_id }}">
+</form>
+{% endmacro %}

@@ -1,4 +1,0 @@
-CONS_TOK=''
-CONS_SEC=''
-APP_TOK=''
-APP_SEC=''
