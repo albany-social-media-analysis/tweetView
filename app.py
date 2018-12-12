@@ -1,69 +1,137 @@
-from flask import Flask, render_template, flash, request, redirect, url_for
-from flask_uploads import UploadSet, configure_uploads, patch_request_class, TEXT, DATA
-from flask_wtf.file import FileField, FileRequired, FileAllowed
+from flask import Flask, render_template, request, session, redirect
+from flask_security import Security, login_required, SQLAlchemySessionUserDatastore
+from flask_login import current_user
+from flask_mail import Mail
+
 from flask_wtf import FlaskForm
-import os
-from wtforms import SubmitField
-import tweepy
-from twitter_auth import *
-import pandas as pd
+from wtforms import StringField, TextField
+from wtforms.validators import DataRequired
 
-DATA_DIR = os.path.join(os.getcwd(),'uploads')
+from auth.database import db_session, init_db
+from auth.models import User, Role
 
+import sheets as sheets
+from tweet_url import get_final_url, get_tweet_html
+
+# Create app
 app = Flask(__name__)
-app.config['UPLOADED_TWEETIDS_DEST'] = DATA_DIR
-app.config['SECRET_KEY']='tweeterviewer'
+app.config['DEBUG'] = True
+app.config['SECRET_KEY'] = 'super-secret'
+app.config['SECURITY_PASSWORD_SALT'] = 'super-secret-random-salt'
 
-## --------- Image Uploading Block --------- ##
-tweetids = UploadSet(
-    'tweetids',
-    TEXT + DATA,
-)
-configure_uploads(app,tweetids)
-patch_request_class(app)
+app.config['SECURITY_REGISTERABLE']=True
+app.config['SECURITY_TRACKABLE']=True
+app.config['SECURITY_RECOVERABLE']=False
+app.config['SECURITY_CHANGEABLE']=False
 
-class UploadForm(FlaskForm):
-    tweetids = FileField(
-        validators=[
-            FileAllowed(tweetids, u'must be .txt or .csv'),
-            FileRequired(u'File was empty!')
-        ]
-    )
-    submit = SubmitField(u'Upload')
+app.config['SECURITY_SEND_REGISTER_EMAIL']=False
+app.config['SECURITY_SEND_PASSWORD_CHANGE_EMAIL']=False
+app.config['SECURITY_SEND_PASSWORD_RESET_EMAIL']=False
+app.config['SECURITY_SEND_PASSWORD_RESET_NOTICE_EMAIL']=False
 
-@app.route('/', methods=['GET', 'POST'])
-def upload_file():
+# app.config['SECURITY_EMAIL_SENDER'] = 'status@arcc.albany.edu'
+# app.config['MAIL_SERVER'] = 'smtp.ritmail.rit.albany.edu'
+# app.config['MAIL_PORT'] = 25
+# app.config['MAIL_USE_SSL']=False
+# app.config['MAIL_DEFAULT_SENDER']='status@arcc.albany.edu'
+# mail = Mail(app)
 
-    form = UploadForm()
+# Setup Flask-Security
+user_datastore = SQLAlchemySessionUserDatastore(db_session,
+                                                User, Role)
+security = Security(app, user_datastore)
 
-    if form.validate_on_submit():
-        filename = tweetids.save(form.tweetids.data)
-        file_url = tweetids.url(filename)
+
+
+@app.before_first_request
+def generate_db():
+    init_db()
+
+# Create a user to test with
+@app.route('/', methods=['GET'])
+def home():
+    if current_user.is_authenticated:
+        usr = security.datastore.find_user(email=current_user.email)
+        if usr.gdrive_url != '':
+            sheet=sheets.get_worksheet(usr.gdrive_url,'Sheet1')
+
+            idx=sheets.get_last_commented_row(sheet)
+            tweet_id=sheet.cell(idx,1).value
+            tweet_id=tweet_id.replace('ID_','')
+
+        print(tweet_id)
+        oembed=get_tweet_html(tweet_id)
+        return render_template('index.html',gdrive_url=usr.gdrive_url,place_holder='Comments here ...',tweet_oembed=oembed,curr_id=idx)
     else:
-        file_url = None
+        return redirect('/login')
 
-    # Authenticate twitter
-    auth = tweepy.OAuthHandler(CONS_TOK, CONS_SEC)
-    auth.set_access_token(APP_TOK,APP_SEC)
-    api = tweepy.API(auth)
-    tweets = []
+@app.route('/update_gdrive_url',methods=['GET','POST'])
+def update_gdrive_url():
+    # Get the active user and update the gdrive url
+    usr = security.datastore.find_user(email=current_user.email)
+    usr.gdrive_url=request.form['gDriveUrl']
 
-    if file_url is not None:
-        # Read file from the drive to avoid issues with MAC
-        file_url = os.path.join(DATA_DIR,file_url.split('/')[-1])
+    if usr.gdrive_url != '':
+        sheet=sheets.get_worksheet(usr.gdrive_url,'Sheet1')
+        idx=sheets.get_last_commented_row(sheet)
+        tweet_id=sheet.cell(idx,1).value
+        tweet_id=tweet_id.replace('ID_','')
+        print(tweet_id)
 
-        df = pd.read_csv(file_url)
-        for r,i in df.iterrows():
-            if 'ID_' in i.tweet_id_str:
-                i = i.tweet_id_str.replace('ID_',"")
+    # Commit the change to the databse
+    security.datastore.commit()
 
-            tmp = api.get_oembed(id=i,omit_script=False)
-            tweets.append(
-                tmp
-            )
-    return render_template('render_tweets.html',form=form, file_url=file_url,tweets=tweets)
+    # reaccess the user
+    usr = security.datastore.find_user(email=current_user.email)
+    oembed=get_tweet_html('1068523060418928640')
 
-## --------- ##
+    return render_template('index.html',gdrive_url=usr.gdrive_url,place_holder='Comments here ...',curr_id=idx,tweet_oembed=oembed)
+
+@app.route('/get_next_tweet',methods=['GET','POST'])
+def get_next_tweet():
+    usr = security.datastore.find_user(email=current_user.email)
+    sheet=sheets.get_worksheet(usr.gdrive_url,'Sheet1')
+
+    print(request.form)
+
+    form=dict()
+    for k,v in request.form.items():
+        if k=='comment':
+            form[k]=v
+        else:
+            form[v]=k
+
+    # update the row indexer for the next tweet
+    if 'next' in form.keys():
+        row=int(form['next'])
+        
+        # Post the comment
+        if 'comment' in form.keys():
+            sheet.update_cell(row,3,form['comment'])
+            sheet.update_cell(row,2,usr.email)
+        else:
+            sheet.update_cell(row,2,usr.email)
+        row+=1
+    
+    if 'previous' in form.keys():
+        row=int(form['previous'])
+
+        if 'comment' in form.keys():
+            sheet.update_cell(row,3,form['comment'])
+            sheet.update_cell(row,2,usr.email)
+        else:
+            sheet.update_cell(row,2,usr.email)
+
+        if row != 1:
+            row-=1
+    
+    tweetid=sheet.cell(row,1).value
+    if tweetid != '':
+        oembed=get_tweet_html(tweetid.replace('ID_',''))
+    else:
+        oembed='<div> There are no more tweet ids!!</div>'
+    
+    return render_template('index.html',gdrive_url=usr.gdrive_url,place_holder='Comments here ...',tweet_oembed=oembed,curr_id=row)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
