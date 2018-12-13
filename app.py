@@ -80,7 +80,7 @@ def update_gdrive_url():
         idx=sheets.get_last_commented_row(sheet)
         tweet_id=sheet.cell(idx,1).value
         tweet_id=tweet_id.replace('ID_','')
-        print(tweet_id)
+        #print(tweet_id)
     
     # Commit the change to the databse
     security.datastore.commit()
@@ -97,7 +97,7 @@ def get_next_tweet():
     gc = gspread.authorize(sheets.creds)
     sheet=sheets.get_worksheet(gc,usr.gdrive_url,'Sheet1')
 
-    print(request.form)
+    #print(request.form)
 
     form=dict()
     for k,v in request.form.items():
