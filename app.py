@@ -29,11 +29,11 @@ app.config['SECURITY_SEND_PASSWORD_CHANGE_EMAIL']=False
 app.config['SECURITY_SEND_PASSWORD_RESET_EMAIL']=False
 app.config['SECURITY_SEND_PASSWORD_RESET_NOTICE_EMAIL']=False
 
-# app.config['SECURITY_EMAIL_SENDER'] = 'status@arcc.albany.edu'
-# app.config['MAIL_SERVER'] = 'smtp.ritmail.rit.albany.edu'
-# app.config['MAIL_PORT'] = 25
-# app.config['MAIL_USE_SSL']=False
-# app.config['MAIL_DEFAULT_SENDER']='status@arcc.albany.edu'
+# app.config['SECURITY_EMAIL_SENDER'] = ''
+# app.config['MAIL_SERVER'] = ''
+# app.config['MAIL_PORT'] = ''
+# app.config['MAIL_USE_SSL']=''
+# app.config['MAIL_DEFAULT_SENDER']=''
 # mail = Mail(app)
 
 # Setup Flask-Security
