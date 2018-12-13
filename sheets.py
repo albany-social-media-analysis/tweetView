@@ -7,7 +7,6 @@ import numpy as np
 scope = ['https://www.googleapis.com/auth/spreadsheets']
 
 creds = ServiceAccountCredentials.from_json_keyfile_name('client_secret.json', scope)
-gc = gspread.authorize(creds)
 
 def get_sheet_id(spreadsheet,sheet_name):
     for w in spreadsheet.worksheets():
@@ -22,7 +21,7 @@ def initialize_header(worksheet):
     if worksheet.cell(1,3).value != 'comments':
         worksheet.update_cell(1,3,'comments')
 
-def get_worksheet(url,sheet_name='Sheet1'):
+def get_worksheet(gc,url,sheet_name='Sheet1'):
 
     spreadsheet=gc.open_by_url(url)
     ws_id = get_sheet_id(spreadsheet,sheet_name)

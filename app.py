@@ -12,6 +12,7 @@ from auth.models import User, Role
 
 import sheets as sheets
 from tweet_url import get_final_url, get_tweet_html
+import gspread
 
 # Create app
 app = Flask(__name__)
@@ -53,13 +54,13 @@ def home():
     if current_user.is_authenticated:
         usr = security.datastore.find_user(email=current_user.email)
         if usr.gdrive_url:
-            sheet=sheets.get_worksheet(usr.gdrive_url,'Sheet1')
+            gc = gspread.authorize(sheets.creds)
+            sheet=sheets.get_worksheet(gc,usr.gdrive_url,'Sheet1')
 
             idx=sheets.get_last_commented_row(sheet)
             tweet_id=sheet.cell(idx,1).value
             tweet_id=tweet_id.replace('ID_','')
 
-            print(tweet_id)
             oembed=get_tweet_html(tweet_id)
             return render_template('index.html',gdrive_url=usr.gdrive_url,place_holder='Comments here ...',tweet_oembed=oembed,curr_id=idx)
         else:
@@ -74,12 +75,13 @@ def update_gdrive_url():
     usr.gdrive_url=request.form['gDriveUrl']
 
     if usr.gdrive_url:
-        sheet=sheets.get_worksheet(usr.gdrive_url,'Sheet1')
+        gc = gspread.authorize(sheets.creds)
+        sheet=sheets.get_worksheet(gc,usr.gdrive_url,'Sheet1')
         idx=sheets.get_last_commented_row(sheet)
         tweet_id=sheet.cell(idx,1).value
         tweet_id=tweet_id.replace('ID_','')
         print(tweet_id)
-
+    
     # Commit the change to the databse
     security.datastore.commit()
 
@@ -92,7 +94,8 @@ def update_gdrive_url():
 @app.route('/get_next_tweet',methods=['GET','POST'])
 def get_next_tweet():
     usr = security.datastore.find_user(email=current_user.email)
-    sheet=sheets.get_worksheet(usr.gdrive_url,'Sheet1')
+    gc = gspread.authorize(sheets.creds)
+    sheet=sheets.get_worksheet(gc,usr.gdrive_url,'Sheet1')
 
     print(request.form)
 
