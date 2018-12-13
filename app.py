@@ -15,9 +15,9 @@ from tweet_url import get_final_url, get_tweet_html
 
 # Create app
 app = Flask(__name__)
-app.config['DEBUG'] = True
+app.config['DEBUG'] = False
 app.config['SECRET_KEY'] = 'super-secret'
-app.config['SECURITY_PASSWORD_SALT'] = 'super-secret-random-salt'
+app.config['SECURITY_PASSWORD_SALT'] = 'super-secret-salt'
 
 app.config['SECURITY_REGISTERABLE']=True
 app.config['SECURITY_TRACKABLE']=True
@@ -52,16 +52,18 @@ def generate_db():
 def home():
     if current_user.is_authenticated:
         usr = security.datastore.find_user(email=current_user.email)
-        if usr.gdrive_url != '':
+        if usr.gdrive_url:
             sheet=sheets.get_worksheet(usr.gdrive_url,'Sheet1')
 
             idx=sheets.get_last_commented_row(sheet)
             tweet_id=sheet.cell(idx,1).value
             tweet_id=tweet_id.replace('ID_','')
 
-        print(tweet_id)
-        oembed=get_tweet_html(tweet_id)
-        return render_template('index.html',gdrive_url=usr.gdrive_url,place_holder='Comments here ...',tweet_oembed=oembed,curr_id=idx)
+            print(tweet_id)
+            oembed=get_tweet_html(tweet_id)
+            return render_template('index.html',gdrive_url=usr.gdrive_url,place_holder='Comments here ...',tweet_oembed=oembed,curr_id=idx)
+        else:
+            return render_template('index.html',place_holder='Comments here ...')
     else:
         return redirect('/login')
 
@@ -71,7 +73,7 @@ def update_gdrive_url():
     usr = security.datastore.find_user(email=current_user.email)
     usr.gdrive_url=request.form['gDriveUrl']
 
-    if usr.gdrive_url != '':
+    if usr.gdrive_url:
         sheet=sheets.get_worksheet(usr.gdrive_url,'Sheet1')
         idx=sheets.get_last_commented_row(sheet)
         tweet_id=sheet.cell(idx,1).value
@@ -83,7 +85,7 @@ def update_gdrive_url():
 
     # reaccess the user
     usr = security.datastore.find_user(email=current_user.email)
-    oembed=get_tweet_html('1068523060418928640')
+    oembed=get_tweet_html(tweet_id)
 
     return render_template('index.html',gdrive_url=usr.gdrive_url,place_holder='Comments here ...',curr_id=idx,tweet_oembed=oembed)
 
@@ -107,7 +109,8 @@ def get_next_tweet():
         
         # Post the comment
         if 'comment' in form.keys():
-            sheet.update_cell(row,3,form['comment'])
+            if form['comment'] != '':
+                sheet.update_cell(row,3,form['comment'])
             sheet.update_cell(row,2,usr.email)
         else:
             sheet.update_cell(row,2,usr.email)
@@ -122,7 +125,7 @@ def get_next_tweet():
         else:
             sheet.update_cell(row,2,usr.email)
 
-        if row != 1:
+        if row != 2:
             row-=1
     
     tweetid=sheet.cell(row,1).value
@@ -134,4 +137,4 @@ def get_next_tweet():
     return render_template('index.html',gdrive_url=usr.gdrive_url,place_holder='Comments here ...',tweet_oembed=oembed,curr_id=row)
 
 if __name__ == '__main__':
-    app.run()
+    app.run(ssl_context=('cert.pem', 'key.pem'))
