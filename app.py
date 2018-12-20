@@ -55,7 +55,7 @@ def generate_db():
 def home():
     if current_user.is_authenticated:
         usr = security.datastore.find_user(email=current_user.email)
-        if usr.gdrive_url and usr.gdrive_sheet:
+        if usr.gdrive_url != '' and usr.gdrive_sheet != '':
             gc = gspread.authorize(sheets.creds)
             sheet=sheets.get_worksheet(gc,usr.gdrive_url,usr.gdrive_sheet)
 
@@ -76,7 +76,7 @@ def home():
                         sheets.CRED_PATH,
                         usr.gdrive_url,
                         usr.gdrive_sheet,
-                        '{0}2'.format(xl_col_to_name(c))
+                        '{0}!{1}2'.format(usr.gdrive_sheet,xl_col_to_name(c))
                     )
             return render_template('index.html',
                 gdrive_url=usr.gdrive_url,
@@ -94,14 +94,19 @@ def home():
 def update_gdrive_url():
     # Get the active user and update the gdrive url
     usr = security.datastore.find_user(email=current_user.email)
-    usr.gdrive_url=request.form['gDriveUrl']
+   
+    if request.form['gDriveUrl'] != '':
+        usr.gdrive_url=request.form['gDriveUrl']
 
     if request.form['gDriveSheetName'] == '':
         usr.gdrive_sheet='Sheet1'
     else:
         usr.gdrive_sheet=request.form['gDriveSheetName']
 
-    if usr.gdrive_url and usr.gdrive_sheet:
+    # print(usr.gdrive_url)
+    # print(usr.gdrive_sheet)
+    if usr.gdrive_url != '' and usr.gdrive_sheet != '':
+        # print(True)
         gc = gspread.authorize(sheets.creds)
         sheet=sheets.get_worksheet(gc,usr.gdrive_url,usr.gdrive_sheet)
         idx=sheets.get_last_commented_row(sheet)
@@ -126,9 +131,9 @@ def update_gdrive_url():
                 sheets.CRED_PATH,
                 usr.gdrive_url,
                 usr.gdrive_sheet,
-                '{0}2'.format(xl_col_to_name(c))
+                '{0}!{1}2'.format(usr.gdrive_sheet,xl_col_to_name(c))
             )
-
+    #print(validation_data)
     return render_template('index.html',gdrive_url=usr.gdrive_url,
                 gdrive_sheet=usr.gdrive_sheet,validation=validation_data,
                 curr_id=idx,tweet_oembed=oembed)
@@ -150,7 +155,7 @@ def get_next_tweet():
                 sheets.CRED_PATH,
                 usr.gdrive_url,
                 usr.gdrive_sheet,
-                '{0}2'.format(xl_col_to_name(c))
+                '{0}!{1}2'.format(usr.gdrive_sheet,xl_col_to_name(c))
             )
     #print(request.form)
     form=dict()
