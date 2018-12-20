@@ -33,3 +33,4 @@ class User(Base, UserMixin):
     roles = relationship('Role', secondary='roles_users',
                          backref=backref('users', lazy='dynamic'))
     gdrive_url=Column(String(255))
+    gdrive_sheet=Column(String(255))

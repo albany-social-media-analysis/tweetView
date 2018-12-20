@@ -13,6 +13,8 @@ from auth.models import User, Role
 import sheets as sheets
 from tweet_url import get_final_url, get_tweet_html
 import gspread
+from xlsxwriter.utility import xl_col_to_name
+import numpy as np 
 
 # Create app
 app = Flask(__name__)
@@ -53,18 +55,38 @@ def generate_db():
 def home():
     if current_user.is_authenticated:
         usr = security.datastore.find_user(email=current_user.email)
-        if usr.gdrive_url:
+        if usr.gdrive_url and usr.gdrive_sheet:
             gc = gspread.authorize(sheets.creds)
-            sheet=sheets.get_worksheet(gc,usr.gdrive_url,'Sheet1')
+            sheet=sheets.get_worksheet(gc,usr.gdrive_url,usr.gdrive_sheet)
 
             idx=sheets.get_last_commented_row(sheet)
             tweet_id=sheet.cell(idx,1).value
             tweet_id=tweet_id.replace('ID_','')
 
             oembed=get_tweet_html(tweet_id)
-            return render_template('index.html',gdrive_url=usr.gdrive_url,place_holder='Comments here ...',tweet_oembed=oembed,curr_id=idx)
+
+            # Get the columns. This will drive validation a few other things
+            cols=sheet.row_values(1)
+
+            # Get the validation data for each column
+            validation_data = {}    
+            if len(cols) > 2:
+                for c in range(2,len(cols)):
+                    validation_data[cols[c]]=sheets.get_validation_data(
+                        sheets.CRED_PATH,
+                        usr.gdrive_url,
+                        usr.gdrive_sheet,
+                        '{0}2'.format(xl_col_to_name(c))
+                    )
+            return render_template('index.html',
+                gdrive_url=usr.gdrive_url,
+                gdrive_sheet=usr.gdrive_sheet,
+                tweet_oembed=oembed,
+                curr_id=idx,
+                validation=validation_data
+            )
         else:
-            return render_template('index.html',place_holder='Comments here ...')
+            return render_template('index.html',gdrive_url="Provide a Link to a Google Sheet",gdrive_sheet='Sheet1')
     else:
         return redirect('/login')
 
@@ -74,9 +96,14 @@ def update_gdrive_url():
     usr = security.datastore.find_user(email=current_user.email)
     usr.gdrive_url=request.form['gDriveUrl']
 
-    if usr.gdrive_url:
+    if request.form['gDriveSheetName'] == '':
+        usr.gdrive_sheet='Sheet1'
+    else:
+        usr.gdrive_sheet=request.form['gDriveSheetName']
+
+    if usr.gdrive_url and usr.gdrive_sheet:
         gc = gspread.authorize(sheets.creds)
-        sheet=sheets.get_worksheet(gc,usr.gdrive_url,'Sheet1')
+        sheet=sheets.get_worksheet(gc,usr.gdrive_url,usr.gdrive_sheet)
         idx=sheets.get_last_commented_row(sheet)
         tweet_id=sheet.cell(idx,1).value
         tweet_id=tweet_id.replace('ID_','')
@@ -89,55 +116,85 @@ def update_gdrive_url():
     usr = security.datastore.find_user(email=current_user.email)
     oembed=get_tweet_html(tweet_id)
 
-    return render_template('index.html',gdrive_url=usr.gdrive_url,place_holder='Comments here ...',curr_id=idx,tweet_oembed=oembed)
+    cols=sheet.row_values(1)
+
+    # Get the validation data for each column
+    validation_data = {}    
+    if len(cols) > 2:
+        for c in range(2,len(cols)):
+            validation_data[cols[c]]=sheets.get_validation_data(
+                sheets.CRED_PATH,
+                usr.gdrive_url,
+                usr.gdrive_sheet,
+                '{0}2'.format(xl_col_to_name(c))
+            )
+
+    return render_template('index.html',gdrive_url=usr.gdrive_url,
+                gdrive_sheet=usr.gdrive_sheet,validation=validation_data,
+                curr_id=idx,tweet_oembed=oembed)
 
 @app.route('/get_next_tweet',methods=['GET','POST'])
 def get_next_tweet():
     usr = security.datastore.find_user(email=current_user.email)
     gc = gspread.authorize(sheets.creds)
-    sheet=sheets.get_worksheet(gc,usr.gdrive_url,'Sheet1')
+    sheet=sheets.get_worksheet(gc,usr.gdrive_url,usr.gdrive_sheet)
 
+    # Get column names
+    cols=sheet.row_values(1)
+    #print(cols)
+    # Get the validation data for each column
+    validation_data = {}    
+    if len(cols) > 2:
+        for c in range(2,len(cols)):
+            validation_data[cols[c]]=sheets.get_validation_data(
+                sheets.CRED_PATH,
+                usr.gdrive_url,
+                usr.gdrive_sheet,
+                '{0}2'.format(xl_col_to_name(c))
+            )
     #print(request.form)
-
     form=dict()
     for k,v in request.form.items():
-        if k=='comment':
-            form[k]=v
-        else:
+        if 'textarea_' in k:
+            form[k.replace('textarea_','')]=v
+        elif v == 'next':
             form[v]=k
-
-    # update the row indexer for the next tweet
-    if 'next' in form.keys():
-        row=int(form['next'])
-        
-        # Post the comment
-        if 'comment' in form.keys():
-            if form['comment'] != '':
-                sheet.update_cell(row,3,form['comment'])
-            sheet.update_cell(row,2,usr.email)
+        elif v == 'previous':
+            form[v]=k
         else:
-            sheet.update_cell(row,2,usr.email)
+            form[k]=v
+
+    #print(form.keys())
+    # update the row indexer for the next tweet
+    if 'next' in form.keys():   
+        row=int(form['next'])     
+        if len(form.keys()) > 1:        
+            for k,v in form.items():
+                if k != 'next':
+                    if v != '':
+                        sheet.update_cell(row,cols.index(k)+1,v)
+        sheet.update_cell(row,2,usr.email)
         row+=1
     
     if 'previous' in form.keys():
         row=int(form['previous'])
+        if len(form.keys()) > 1:
+            for k,v in form.items():
+                if k != 'previous':
+                    if v != '':
+                        sheet.update_cell(row,cols.index(k)+1,v)
+        sheet.update_cell(row,2,usr.email)
+        row-=1
 
-        if 'comment' in form.keys():
-            sheet.update_cell(row,3,form['comment'])
-            sheet.update_cell(row,2,usr.email)
-        else:
-            sheet.update_cell(row,2,usr.email)
-
-        if row != 2:
-            row-=1
-    
     tweetid=sheet.cell(row,1).value
     if tweetid != '':
         oembed=get_tweet_html(tweetid.replace('ID_',''))
     else:
         oembed='<div> There are no more tweet ids!!</div>'
     
-    return render_template('index.html',gdrive_url=usr.gdrive_url,place_holder='Comments here ...',tweet_oembed=oembed,curr_id=row)
+    return render_template('index.html',gdrive_url=usr.gdrive_url,
+                gdrive_sheet=usr.gdrive_sheet,validation=validation_data,
+                tweet_oembed=oembed,curr_id=row)
 
 if __name__ == '__main__':
     app.run()

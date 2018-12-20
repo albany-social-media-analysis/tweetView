@@ -1,14 +1,16 @@
 {% extends "base.html" %}
 {% block content %}
 {% include "gdrive_form.html" %}
-{% from "render_tweets.html" import display_tweet_form, embed_tweet %}
+{% from "render_tweets.html" import display_tweet_form_validation %}
 <div class='container-fluid'>
     <div class="row justify-content-center align-items-center" id="tweet-container">
         {{ tweet_oembed | safe}}
     </div>
     <div class="row align-items-center ">
         <div class="col-sm-12">
-            {{ display_tweet_form(place_holder,curr_id) }}
+            {% if validation %}
+                {{ display_tweet_form_validation(validation,curr_id) }}
+            {% endif %}
         </div>
     </div>
 </div>

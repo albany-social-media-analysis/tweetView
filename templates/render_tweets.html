@@ -5,3 +5,24 @@
   <input type='submit' class='btn btn-primary' value="next" name="{{ curr_id }}">
 </form>
 {% endmacro %}
+
+{% macro display_tweet_form_validation(validation, curr_id) %}
+<div class='container'>
+  <form action="{{ url_for('get_next_tweet') }}" method="POST">
+  {% for k,v in validation.items() %}    
+    <div class='row'>
+      {% if v|length > 0 %}
+        <p> {{ k }} &nbsp&nbsp</p>
+        {% for form_val in v['rowData'][0]['values'][0]['dataValidation']['condition']['values'] %}
+          <input type="radio" name="{{ k }}" value="{{ form_val['userEnteredValue'] }}">{{ form_val['userEnteredValue'] }}&nbsp&nbsp
+        {% endfor %}
+      {% else %}
+        <textarea class="form-control" rows="3" name="textarea_{{ k }}" placeholder=" {{ k }}"></textarea>
+      {% endif %}
+    </div>
+  {% endfor %}  
+  <input type='submit' class='btn btn-primary' value="previous" name="{{ curr_id }}">
+  <input type='submit' class='btn btn-primary' value="next" name="{{ curr_id }}">
+  </form>
+</div>    
+{% endmacro %}

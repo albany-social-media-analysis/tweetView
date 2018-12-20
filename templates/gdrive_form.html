@@ -1,6 +1,7 @@
 <div class='container'>
     <form action="{{ url_for('update_gdrive_url') }}" method="POST">
         <input type='text' placeholder="{{ gdrive_url }}" size=50 name="gDriveUrl">
+        <input type='text' placeholder="{{ gdrive_sheet }}" size=10 name="gDriveSheetName">
         <input type='submit' class='btn btn-primary' value="Update Drive URL"> 
     </form>
 </div>
