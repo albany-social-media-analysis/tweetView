@@ -12,9 +12,9 @@
   {% for k,v in validation.items() %}    
     <div class='row'>
       {% if v|length > 0 %}
-        <p> {{ k }} &nbsp&nbsp</p>
+        <p> {{ k }} &nbsp;&nbsp;</p>
         {% for form_val in v['rowData'][0]['values'][0]['dataValidation']['condition']['values'] %}
-          <input type="radio" name="{{ k }}" value="{{ form_val['userEnteredValue'] }}">{{ form_val['userEnteredValue'] }}&nbsp&nbsp
+          <input type="radio" name="{{ k }}" value="{{ form_val['userEnteredValue'] }}">{{ form_val['userEnteredValue'] }}&nbsp;&nbsp;
         {% endfor %}
       {% else %}
         <textarea class="form-control" rows="3" name="textarea_{{ k }}" placeholder=" {{ k }}"></textarea>
