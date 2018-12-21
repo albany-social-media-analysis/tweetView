@@ -55,36 +55,40 @@ def generate_db():
 def home():
     if current_user.is_authenticated:
         usr = security.datastore.find_user(email=current_user.email)
-        if usr.gdrive_url != '' and usr.gdrive_sheet != '':
-            gc = gspread.authorize(sheets.creds)
-            sheet=sheets.get_worksheet(gc,usr.gdrive_url,usr.gdrive_sheet)
+        #print(usr.__dict__)
+        if usr.gdrive_url:
+            if usr.gdrive_url != '' and usr.gdrive_sheet != '':
+                gc = gspread.authorize(sheets.creds)
+                sheet=sheets.get_worksheet(gc,usr.gdrive_url,usr.gdrive_sheet)
 
-            idx=sheets.get_last_commented_row(sheet)
-            tweet_id=sheet.cell(idx,1).value
-            tweet_id=tweet_id.replace('ID_','')
+                idx=sheets.get_last_commented_row(sheet)
+                tweet_id=sheet.cell(idx,1).value
+                tweet_id=tweet_id.replace('ID_','')
 
-            oembed=get_tweet_html(tweet_id)
+                oembed=get_tweet_html(tweet_id)
 
-            # Get the columns. This will drive validation a few other things
-            cols=sheet.row_values(1)
+                # Get the columns. This will drive validation a few other things
+                cols=sheet.row_values(1)
 
-            # Get the validation data for each column
-            validation_data = {}    
-            if len(cols) > 2:
-                for c in range(2,len(cols)):
-                    validation_data[cols[c]]=sheets.get_validation_data(
-                        sheets.CRED_PATH,
-                        usr.gdrive_url,
-                        usr.gdrive_sheet,
-                        '{0}!{1}2'.format(usr.gdrive_sheet,xl_col_to_name(c))
-                    )
-            return render_template('index.html',
-                gdrive_url=usr.gdrive_url,
-                gdrive_sheet=usr.gdrive_sheet,
-                tweet_oembed=oembed,
-                curr_id=idx,
-                validation=validation_data
-            )
+                # Get the validation data for each column
+                validation_data = {}    
+                if len(cols) > 2:
+                    for c in range(2,len(cols)):
+                        validation_data[cols[c]]=sheets.get_validation_data(
+                            sheets.CRED_PATH,
+                            usr.gdrive_url,
+                            usr.gdrive_sheet,
+                            '{0}!{1}2'.format(usr.gdrive_sheet,xl_col_to_name(c))
+                        )
+                return render_template('index.html',
+                    gdrive_url=usr.gdrive_url,
+                    gdrive_sheet=usr.gdrive_sheet,
+                    tweet_oembed=oembed,
+                    curr_id=idx,
+                    validation=validation_data
+                )
+            else:
+                return render_template('index.html',gdrive_url="Provide a Link to a Google Sheet",gdrive_sheet='Sheet1')
         else:
             return render_template('index.html',gdrive_url="Provide a Link to a Google Sheet",gdrive_sheet='Sheet1')
     else:
