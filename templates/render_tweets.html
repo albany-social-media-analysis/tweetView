@@ -25,7 +25,9 @@
                 {% endfor %}
             {% endif %}
           {% endfor %}
-        {% endfor %}      
+        {% endfor %}
+      {% else %}      
+        <textarea class="form-control" rows="3" name="textarea_{{ k }}" placeholder=" {{ k }}"></textarea>
       {% endif %}
     </div>
   {% endfor %}  
