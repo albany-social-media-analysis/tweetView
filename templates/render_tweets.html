@@ -10,18 +10,22 @@
 <div class='container'>
   <form action="{{ url_for('get_next_tweet') }}" method="POST">
   {% for k,v in validation.items() %}    
-    <div class='row'>
+    <div class='row form-group'>
       {% if v|length > 0 %}
         <p> {{ k }} &nbsp;&nbsp;</p>
         {% for form_val in v['rowData'] %}
           {% for val in form_val['values'] %}
             {% if val['dataValidation']['condition']['type'] == 'ONE_OF_LIST' %}
               {% for radio in val['dataValidation']['condition']['values'] %}
-                <input type="radio" name="{{ k }}" value="{{ radio['userEnteredValue'] }}">{{ radio['userEnteredValue'] }}&nbsp;
+                <label class="radio-inline control-label">
+                  <input type="radio" name="{{ k }}" value="{{ radio['userEnteredValue'] }}">{{ radio['userEnteredValue'] }}&nbsp;&nbsp;
+                </label>
               {% endfor %}
             {% elif val['dataValidation']['condition']['type'] == 'NUMBER_BETWEEN' %}
                 {% for radio in range(val['dataValidation']['condition']['values'][0]['userEnteredValue']|int,val['dataValidation']['condition']['values'][1]['userEnteredValue']|int + 1) %}
-                  <input type="radio" name="{{ k }}" value="{{ radio }}">{{ radio }}&nbsp;
+                  <label class="radio-inline control-label">
+                    <input type="radio" name="{{ k }}" value="{{ radio }}">{{ radio }}&nbsp;&nbsp;
+                  </label>
                 {% endfor %}
             {% endif %}
           {% endfor %}
