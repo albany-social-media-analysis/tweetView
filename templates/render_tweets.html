@@ -13,11 +13,19 @@
     <div class='row'>
       {% if v|length > 0 %}
         <p> {{ k }} &nbsp;&nbsp;</p>
-        {% for form_val in v['rowData'][0]['values'][0]['dataValidation']['condition']['values'] %}
-          <input type="radio" name="{{ k }}" value="{{ form_val['userEnteredValue'] }}">{{ form_val['userEnteredValue'] }}&nbsp;&nbsp;
-        {% endfor %}
-      {% else %}
-        <textarea class="form-control" rows="3" name="textarea_{{ k }}" placeholder=" {{ k }}"></textarea>
+        {% for form_val in v['rowData'] %}
+          {% for val in form_val['values'] %}
+            {% if val['dataValidation']['condition']['type'] == 'ONE_OF_LIST' %}
+              {% for radio in val['dataValidation']['condition']['values'] %}
+                <input type="radio" name="{{ k }}" value="{{ radio['userEnteredValue'] }}">{{ radio['userEnteredValue'] }}&nbsp;
+              {% endfor %}
+            {% elif val['dataValidation']['condition']['type'] == 'NUMBER_BETWEEN' %}
+                {% for radio in range(val['dataValidation']['condition']['values'][0]['userEnteredValue']|int,val['dataValidation']['condition']['values'][1]['userEnteredValue']|int + 1) %}
+                  <input type="radio" name="{{ k }}" value="{{ radio }}">{{ radio }}&nbsp;
+                {% endfor %}
+            {% endif %}
+          {% endfor %}
+        {% endfor %}      
       {% endif %}
     </div>
   {% endfor %}  

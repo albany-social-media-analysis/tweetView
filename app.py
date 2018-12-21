@@ -80,6 +80,8 @@ def home():
                             usr.gdrive_sheet,
                             '{0}!{1}2'.format(usr.gdrive_sheet,xl_col_to_name(c))
                         )
+
+                #print(validation_data)
                 return render_template('index.html',
                     gdrive_url=usr.gdrive_url,
                     gdrive_sheet=usr.gdrive_sheet,
