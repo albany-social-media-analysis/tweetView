@@ -127,7 +127,6 @@ def update_gdrive_url():
     usr = security.datastore.find_user(email=current_user.email)
     oembed=get_tweet_html(tweet_id)
 
-
     cols=sheet.row_values(1)
 
     # Get the validation data for each column
@@ -201,10 +200,26 @@ def get_next_tweet():
     tweet_id=sheet.cell(row,1).value
     
 
-    if tweet_id != '':
+    if row==0:
+        oembed=f"""<div class="card border-primary mb-3" style="max-width: 60rem;">
+               <div class="card-header">Sheets Error</div>
+                 <div class="card-body">
+                   <p> You've reached the begging of the sheet, please hit next! <p>
+                 </div>
+               </div>
+              </div>
+          """
+    elif tweet_id != '':
         oembed=get_tweet_html(tweet_id)
     else:
-        oembed='<div> There are no more tweet ids!!</div>'
+        oembed="""<div class="card border-primary mb-3" style="max-width: 60rem;">
+               <div class="card-header">Sheets Error</div>
+                 <div class="card-body">
+                   <p> There are no more tweets left in the sheet! <p>
+                 </div>
+               </div>
+              </div>
+          """
     
     return render_template('index.html',gdrive_url=usr.gdrive_url,
                 gdrive_sheet=usr.gdrive_sheet,validation=validation_data,
