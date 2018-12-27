@@ -127,6 +127,7 @@ def update_gdrive_url():
     usr = security.datastore.find_user(email=current_user.email)
     oembed=get_tweet_html(tweet_id)
 
+
     cols=sheet.row_values(1)
 
     # Get the validation data for each column
@@ -197,9 +198,11 @@ def get_next_tweet():
         sheet.update_cell(row,2,usr.email)
         row-=1
 
-    tweetid=sheet.cell(row,1).value
-    if tweetid != '':
-        oembed=get_tweet_html(tweetid.replace('ID_',''))
+    tweet_id=sheet.cell(row,1).value
+    
+
+    if tweet_id != '':
+        oembed=get_tweet_html(tweet_id)
     else:
         oembed='<div> There are no more tweet ids!!</div>'
     

@@ -17,6 +17,15 @@ def get_tweet_html(tweet_id, omit_script=True):
      params = {'id':tweet_id,
                'omit_script':omit_script}
      r = requests.get(url, params=params)
-     tweet_html = r.json()[u'html']
-
-     return tweet_html
+     try:
+          r.raise_for_status()
+          return r.json()[u'html']
+     except Exception as e:
+          return f"""<div class="card border-primary mb-3" style="max-width: 60rem;">
+               <div class="card-header">Twitter Error</div>
+                 <div class="card-body">
+                   <p> {e} <p>
+                 </div>
+               </div>
+              </div>
+          """
