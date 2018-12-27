@@ -204,7 +204,7 @@ def get_next_tweet():
         oembed=f"""<div class="card border-primary mb-3" style="max-width: 60rem;">
                <div class="card-header">Sheets Error</div>
                  <div class="card-body">
-                   <p> You've reached the begging of the sheet, please hit next! <p>
+                   <p> You've reached the start of the sheet, please hit next! <p>
                  </div>
                </div>
               </div>
