@@ -184,7 +184,8 @@ def get_next_tweet():
                 if k != 'next':
                     if v != '':
                         sheet.update_cell(row,cols.index(k)+1,v)
-        sheet.update_cell(row,2,usr.email)
+        if row != 1:
+            sheet.update_cell(row,2,usr.email)
         row+=1
     
     if 'previous' in form.keys():
@@ -194,13 +195,12 @@ def get_next_tweet():
                 if k != 'previous':
                     if v != '':
                         sheet.update_cell(row,cols.index(k)+1,v)
-        sheet.update_cell(row,2,usr.email)
+        if row !=1:
+            sheet.update_cell(row,2,usr.email)
         row-=1
-
-    tweet_id=sheet.cell(row,1).value
     
 
-    if row==0:
+    if row <= 1:
         oembed=f"""<div class="card border-primary mb-3" style="max-width: 60rem;">
                <div class="card-header">Sheets Error</div>
                  <div class="card-body">
@@ -209,17 +209,20 @@ def get_next_tweet():
                </div>
               </div>
           """
-    elif tweet_id != '':
-        oembed=get_tweet_html(tweet_id)
+        row=1
     else:
-        oembed="""<div class="card border-primary mb-3" style="max-width: 60rem;">
-               <div class="card-header">Sheets Error</div>
-                 <div class="card-body">
-                   <p> There are no more tweets left in the sheet! <p>
-                 </div>
-               </div>
-              </div>
-          """
+        tweet_id=sheet.cell(row,1).value
+        if tweet_id != '':
+            oembed=get_tweet_html(tweet_id)
+        else:
+            oembed="""<div class="card border-primary mb-3" style="max-width: 60rem;">
+                <div class="card-header">Sheets Error</div>
+                    <div class="card-body">
+                    <p> There are no more tweets left in the sheet! <p>
+                    </div>
+                </div>
+                </div>
+            """
     
     return render_template('index.html',gdrive_url=usr.gdrive_url,
                 gdrive_sheet=usr.gdrive_sheet,validation=validation_data,
