@@ -152,7 +152,8 @@ def get_next_tweet():
 
     # Get column names
     cols=sheet.row_values(1)
-    #print(cols)
+    print(cols)
+
     # Get the validation data for each column
     validation_data = {}    
     if len(cols) > 2:
@@ -163,7 +164,7 @@ def get_next_tweet():
                 usr.gdrive_sheet,
                 '{0}!{1}2'.format(usr.gdrive_sheet,xl_col_to_name(c))
             )
-    #print(request.form)
+    print(request.form)
     form=dict()
     for k,v in request.form.items():
         if 'textarea_' in k:
@@ -199,7 +200,6 @@ def get_next_tweet():
             sheet.update_cell(row,2,usr.email)
         row-=1
     
-
     if row <= 1:
         oembed=f"""<div class="card border-primary mb-3" style="max-width: 60rem;">
                <div class="card-header">Sheets Error</div>
@@ -212,6 +212,7 @@ def get_next_tweet():
         row=1
     else:
         tweet_id=sheet.cell(row,1).value
+        #print(tweet_id)
         if tweet_id != '':
             oembed=get_tweet_html(tweet_id)
         else:
@@ -223,7 +224,7 @@ def get_next_tweet():
                 </div>
                 </div>
             """
-    
+    print(oembed)
     return render_template('index.html',gdrive_url=usr.gdrive_url,
                 gdrive_sheet=usr.gdrive_sheet,validation=validation_data,
                 tweet_oembed=oembed,curr_id=row)

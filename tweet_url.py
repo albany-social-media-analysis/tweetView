@@ -14,8 +14,12 @@ def get_final_url(tweet_id):
 def get_tweet_html(tweet_id, omit_script=True):
      url = 'https://api.twitter.com/1.1/statuses/oembed.json'
 
+     if 'ID_' in tweet_id:
+          tweet_id=tweet_id.replace('ID_','')
+
      params = {'id':tweet_id,
                'omit_script':omit_script}
+     
      r = requests.get(url, params=params)
      try:
           r.raise_for_status()
