@@ -55,7 +55,7 @@ sqlite==3.25.3
 tk==8.6.9
 traitlets==4.3.2
 tweepy==3.5.0
-urllib3==1.23
+urllib3==1.24.2
 wcwidth==0.1.7
 werkzeug==0.14.1
 wheel==0.32.3
