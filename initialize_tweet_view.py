@@ -8,14 +8,14 @@ tv_users = tv_admin_db['USERS']
 # establish tool admin role for the db
 client.admin.command(
     "createRole",
-    "TV_tool_admin",
+    "Tool Admin",
     privileges=[],
     roles=["root"]
 )
 # establish project lead role for the db
 tv_admin_db.command(
     "createRole",
-    "TV_project_lead",
+    "Project Lead",
     privileges=[
         {"resource": {"db": "TV_ADMIN", "collection": ""},
          "actions": ["createUser", "dropUser", "grantRole", "changePassword",
@@ -25,7 +25,7 @@ tv_admin_db.command(
 # ADMIN DB OR MAYBE JUST CREATE PROJECT ANALYST ROLES IN OTHER DBS ONLY
 tv_admin_db.command(
     "createRole",
-    "TV_project_analyst",
+    "Project Analyst",
     privileges=[],
     roles=[])
 # create a default system admin user (for dummy use and other cases)
