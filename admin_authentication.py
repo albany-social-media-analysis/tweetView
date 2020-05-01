@@ -14,71 +14,128 @@ class TVAdminAuthorizedCreationControls:
                                   port=mongo_config.port)
         self.tv_admin_db = self.client.TV_ADMIN
 
-    def create_tool_admin(self, user_name, pwd):
-        project_user_list = self.tv_admin_db.command('usersInfo')['users']
-        project_user_list = [userinfo['user'] for userinfo in project_user_list]
-        if user_name in project_user_list:
-            denied_message = 'This user name is  already in use'
-            return denied_message, None
+    def create_tool_admin(self, user_name, pwd, email, first_name=None, last_name=None):
+        if (user_name != None) & (pwd != None) & (email != None):
+
+            project_user_list = self.tv_admin_db.command('usersInfo')['users']
+            project_user_list = [userinfo['user'] for userinfo in project_user_list]
+            if user_name in project_user_list:
+                denied_message = 'This user name is  already in use'
+                return denied_message, None, None, None
+            else:
+                self.tv_admin_db.command("createUser", user_name, pwd=pwd, roles=[{'role': 'test Tool Admin', 'db': 'admin'}])
+                new_user_contact_doc = {"FIRST NAME": first_name,
+                                        "LAST NAME": last_name,
+                                        "USER": user_name,
+                                        "CONTACT EMAIL": email,
+                                        "ASSIGNMENTS": [{"PROJECT_NAME": "ALL", "ROLE": "TOOL ADMIN"}]
+                                        }
+                self.tv_admin_db.USERS.insert_one(new_user_contact_doc)
+
+                approved_message = "Tool admin ", user_name, " created"
+                approved_message_2 = "New user's information has been uploaded to USER collection in ADMIN Database:"
+                return approved_message, approved_message_2, new_user_contact_doc, None
         else:
-            self.tv_admin_db.command("createUser", user_name, pwd=pwd, roles=[{'role': 'test Tool Admin', 'db': 'admin'}])
-            approved_message = "Tool admin ", user_name, " created"
-            return approved_message, None
+            denied_message = "Required fields must be provided to create user: Username, Password, Email"
+            return denied_message
 
-    def create_project_lead(self, user_name, pwd, db_accesses=[]):
-        # Add in Try and exception to make sure what gets passed into db accesses is a list type object
-        project_user_list = self.tv_admin_db.command('usersInfo')['users']
-        project_user_list = [userinfo['user'] for userinfo in project_user_list]
-        if len(db_accesses) > 0:
-            if user_name in project_user_list:
-                denied_message = 'This user name already in use'
-                return denied_message, None
+    def create_project_lead(self, user_name, pwd, email, first_name=None, last_name=None, db_accesses=[]):
+        if (user_name != None) & (pwd != None) & (email != None):
+            project_user_list = self.tv_admin_db.command('usersInfo')['users']
+            project_user_list = [userinfo['user'] for userinfo in project_user_list]
+            if len(db_accesses) > 0:
+                if user_name in project_user_list:
+                    denied_message = 'This user name already in use'
+                    return denied_message, None, None, None
+                else:
+                    all_roles_for_dbs = [{"role": "TV_project_lead", "$db": db_access} for db_access in db_accesses]
+                    all_assignments = [{"PROJECT_NAME": db, "ROLE": "TV_project_lead"} for db in db_accesses]
+                    self.tv_admin_db.command("createUser", user_name, pwd=pwd,
+                                           roles=all_roles_for_dbs.insert(0, {"role": "TV_project_lead", "db": "TV_ADMIN"}))
+                    new_user_contact_doc = {
+                        "FIRST NAME": first_name,
+                        "LAST NAME": last_name,
+                        "USER": user_name,
+                        "CONTACT EMAIL": email,
+                        "ASSIGNMENTS": all_assignments
+                    }
+                    self.tv_admin_db.USER.insert_one(new_user_contact_doc)
+                    approved_message_1 = "project lead", user_name, "created in: "
+                    approved_message_2 = ""
+                    for permitted_db in all_roles_for_dbs:
+                        approved_message_2 += permitted_db+'\n'
+                    approved_message_3 = "New user's information has been uploaded to USER collection in ADMIN Database:"
+                    return approved_message_1, approved_message_2, approved_message_3, new_user_contact_doc
             else:
-                all_roles_for_dbs = [{"role": "TV_project_lead", "$db": db_access} for db_access in db_accesses]
-                self.tv_admin_db.command("createUser", user_name, pwd=pwd,
-                                       roles=all_roles_for_dbs.insert(0, {"role": "TV_project_lead", "db": "TV_ADMIN"}))
-                approved_message_1 = "project lead", user_name, "created in: "
-                approved_message_2 = ""
-                for permitted_db in all_roles_for_dbs:
-                    approved_message_2 += permitted_db+'\n'
-
-                return approved_message_1, approved_message_2
+                if user_name in project_user_list:
+                    denied_message = 'This user name already in use'
+                    return denied_message, None, None, None
+                else:
+                    self.tv_admin_db.command("createUser", user_name, pwd=pwd,
+                                             roles=[{"role": "TV_project_lead", "db": "TV_ADMIN"}])
+                    new_user_contact_doc = {
+                        "FIRST NAME": first_name,
+                        "LAST NAME": last_name,
+                        "USER": user_name,
+                        "CONTACT EMAIL": email,
+                        "ASSIGNMENTS": [],
+                    }
+                    self.tv_admin_db.USERS.insert_one(new_user_contact_doc)
+                    approved_message = "project lead ", user_name, " created in TV_ADMIN Database"
+                    approved_message_2 = "New user's information has been uploaded to USER collection in ADMIN Database:"
+                    return approved_message, approved_message_2, new_user_contact_doc, None
         else:
-            if user_name in project_user_list:
-                denied_message = 'This user name already in use'
-                return denied_message, None
-            else:
-                self.tv_admin_db.command("createUser", user_name, pwd=pwd,
-                                         roles=[{"role": "TV_project_lead", "db": "TV_ADMIN"}])
-                approved_message = "project lead ", user_name, " created in TV_ADMIN Database"
-                return approved_message, None
+            denied_message = "Required fields must be provided to create user: Username, Password, Email"
+            return denied_message, None, None, None
 
-    def create_project_analyst(self, user_name, pwd, db_accesses=[]):
-        project_user_list = self.tv_admin_db.command('usersInfo')['users']
-        project_user_list = [userinfo['user'] for userinfo in project_user_list]
-        if len(db_accesses) > 0:
-            if user_name in project_user_list:
-                denied_message = 'This user name is already in use'
-                return denied_message, None
+    def create_project_analyst(self, user_name, pwd, email, first_name=None, last_name=None, db_accesses=[]):
+        if (user_name != None) & (pwd != None) & (email != None):
+            project_user_list = self.tv_admin_db.command('usersInfo')['users']
+            project_user_list = [userinfo['user'] for userinfo in project_user_list]
+            if len(db_accesses) > 0:
+                if user_name in project_user_list:
+                    denied_message = 'This user name is already in use'
+                    return denied_message, None, None, None
+                else:
+                    all_roles_for_dbs = [{"role": "TV_project_analyst", "$db": db_access} for db_access in db_accesses]
+                    all_assignments = [{"PROJECT NAME": db, "ROLE": "Project Analyst"} for db in db_accesses]
+                    self.tv_admin_db.command("createUser", user_name, pwd=pwd,
+                               roles=all_roles_for_dbs.insert(0, {"role": "TV_project_analyst", "db": "TV_ADMIN"}))
+                    new_user_contact_doc = {
+                        "FIRST NAME": first_name,
+                        "LAST NAME": last_name,
+                        "USER": user_name,
+                        "CONTACT EMAIL": email,
+                        "ASSIGNMENTS": all_assignments,
+                    }
+                    self.tv_admin_db.USERS.insert_one(new_user_contact_doc)
+                    approved_message_1 = "project lead", user_name, "created in: "
+                    approved_message_2 = ""
+                    for permitted_db in all_roles_for_dbs:
+                        approved_message_2 += permitted_db + '\n'
+                    approved_message_3 = "New user's information has been uploaded to USER collection in ADMIN Database:"
+                    return approved_message_1, approved_message_2, approved_message_3, new_user_contact_doc
             else:
-                all_roles_for_dbs = [{"role": "TV_project_analyst", "$db": db_access} for db_access in db_accesses]
-                self.tv_admin_db.command("createUser", user_name, pwd=pwd,
-                           roles=all_roles_for_dbs.insert(0, {"role": "TV_project_analyst", "db": "TV_ADMIN"}))
-                approved_message_1 = "project lead", user_name, "created in: "
-                approved_message_2 = ""
-                for permitted_db in all_roles_for_dbs:
-                    approved_message_2 += permitted_db + '\n'
-
-                return approved_message_1, approved_message_2
+                if user_name in project_user_list:
+                    denied_message = 'This user name is already in use'
+                    return denied_message, None, None, None
+                else:
+                    self.tv_admin_db.command("createUser", user_name, pwd=pwd,
+                                             roles=[{"role": "TV_project_analyst", "db": "TV_ADMIN"}])
+                    new_user_contact_doc = {
+                        "FIRST NAME": first_name,
+                        "LAST NAME": last_name,
+                        "USER": user_name,
+                        "CONTACT EMAIL": email,
+                        "ASSIGNMENTS": [],
+                    }
+                    self.tv_admin_db.USERS.insert_one(new_user_contact_doc)
+                    approved_message = "project analyst ", user_name, " created in TV_ADMIN Database"
+                    approved_message_2 = "New user's information has been uploaded to USER collection in ADMIN Database:"
+                    return approved_message, approved_message_2, new_user_contact_doc, None
         else:
-            if user_name in project_user_list:
-                denied_message = 'This user name is already in use'
-                return denied_message, None
-            else:
-                self.tv_admin_db.command("createUser", user_name, pwd=pwd,
-                                         roles=[{"role": "TV_project_analyst", "db": "TV_ADMIN"}])
-                approved_message = "project analyst ", user_name, " created in TV_ADMIN Database"
-                return approved_message, None
+            denied_message = "Required fields must be provided to create user: Username, Password, Email"
+            return denied_message, None, None, None
 
     # This method will be automatically done when a user creates a new project
     # this method is mainly for when a user needs to gain additional access to a new
