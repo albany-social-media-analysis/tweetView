@@ -15,7 +15,6 @@ class TVAdminAuthorizedCreationControls:
         self.tv_admin_db = self.client.TV_ADMIN
 
     def create_tool_admin(self, user_name, pwd, email, first_name=None, last_name=None):
-        if (user_name != None) & (pwd != None) & (email != None):
 
             project_user_list = self.tv_admin_db.command('usersInfo')['users']
             project_user_list = [userinfo['user'] for userinfo in project_user_list]
@@ -35,12 +34,9 @@ class TVAdminAuthorizedCreationControls:
                 approved_message = "Tool admin ", user_name, " created"
                 approved_message_2 = "New user's information has been uploaded to USER collection in ADMIN Database:"
                 return approved_message, approved_message_2, new_user_contact_doc, None
-        else:
-            denied_message = "Required fields must be provided to create user: Username, Password, Email"
-            return denied_message
 
     def create_project_lead(self, user_name, pwd, email, first_name=None, last_name=None, db_accesses=[]):
-        if (user_name != None) & (pwd != None) & (email != None):
+
             project_user_list = self.tv_admin_db.command('usersInfo')['users']
             project_user_list = [userinfo['user'] for userinfo in project_user_list]
             if len(db_accesses) > 0:
@@ -84,12 +80,9 @@ class TVAdminAuthorizedCreationControls:
                     approved_message = "project lead ", user_name, " created in TV_ADMIN Database"
                     approved_message_2 = "New user's information has been uploaded to USER collection in ADMIN Database:"
                     return approved_message, approved_message_2, new_user_contact_doc, None
-        else:
-            denied_message = "Required fields must be provided to create user: Username, Password, Email"
-            return denied_message, None, None, None
 
     def create_project_analyst(self, user_name, pwd, email, first_name=None, last_name=None, db_accesses=[]):
-        if (user_name != None) & (pwd != None) & (email != None):
+
             project_user_list = self.tv_admin_db.command('usersInfo')['users']
             project_user_list = [userinfo['user'] for userinfo in project_user_list]
             if len(db_accesses) > 0:
@@ -133,9 +126,6 @@ class TVAdminAuthorizedCreationControls:
                     approved_message = "project analyst ", user_name, " created in TV_ADMIN Database"
                     approved_message_2 = "New user's information has been uploaded to USER collection in ADMIN Database:"
                     return approved_message, approved_message_2, new_user_contact_doc, None
-        else:
-            denied_message = "Required fields must be provided to create user: Username, Password, Email"
-            return denied_message, None, None, None
 
     # This method will be automatically done when a user creates a new project
     # this method is mainly for when a user needs to gain additional access to a new
