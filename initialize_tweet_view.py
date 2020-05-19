@@ -1,36 +1,40 @@
 from pymongo import MongoClient
+from pymongo import errors as pymongo_errors
 import mongo_config
 
-client = MongoClient(username=mongo_config.user, password=mongo_config.pwd, port=mongo_config.port)
+client = MongoClient(username=mongo_config.user, password=mongo_config.pwd, port=mongo_config.port) # for this script, mongo_config.user must be an existing root user in Mongo
 
 tv_admin_db = client['TV_ADMIN']
 tv_users = tv_admin_db['USERS']
 # establish tool admin role for the db
-client.admin.command(
-    "createRole",
-    "Tool Admin",
-    privileges=[],
-    roles=["root"]
-)
+try:
+    client.admin.command("createRole","Tool Admin",privileges=[],roles=["root"])
+except pymongo_errors.OperationFailure:
+    print("Tool Admin role already exists. Moving on.")
+    pass
+
 # establish project lead role for the db
-tv_admin_db.command(
-    "createRole",
-    "Project Lead",
-    privileges=[
-        {"resource": {"db": "TV_ADMIN", "collection": ""},
-         "actions": ["createUser", "dropUser", "grantRole", "changePassword",
-                     "revokeRole", "viewUser", "update", "insert"]}],
-    roles=[])
+try:
+    tv_admin_db.command("createRole","Project Lead",privileges=[
+            {"resource": {"db": "TV_ADMIN", "collection": ""},
+             "actions": ["createUser", "dropUser", "grantRole", "changePassword",
+                         "revokeRole", "viewUser", "update", "insert"]}],
+        roles=[])
+except pymongo_errors.OperationFailure:
+    print("Project Lead role already exists. Moving on.")
+    pass
+
 # project analyst will be given read and write permissions in other dbs when they are created NOT IN
 # ADMIN DB OR MAYBE JUST CREATE PROJECT ANALYST ROLES IN OTHER DBS ONLY
-tv_admin_db.command(
-    "createRole",
-    "Project Analyst",
-    privileges=[],
-    roles=[])
+try:
+    tv_admin_db.command("createRole","Project Analyst",privileges=[],roles=[])
+except pymongo_errors.OperationFailure:
+    print("Project Analyst role already exists. Moving on.")
+    pass
+
 # create a default system admin user (for dummy use and other cases)
-tv_admin_db.command("CreateUser", mongo_config.tv_admin, pwd=mongo_config.tv_admin_pwd,
-                    roles=[{"role": "TV_tool_admin"}])
+tv_admin_db.command("createUser", mongo_config.tv_admin, pwd=mongo_config.tv_admin_pwd,
+                    roles=[{"role": "TV_tool_admin", "db": "admin"}])
 # create and insert document into user collection for the default user
 # the assignments field will be an array object that list a project and
 # role that a user has for each project they are assigned to
