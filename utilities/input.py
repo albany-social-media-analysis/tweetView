@@ -9,8 +9,6 @@ See input data template files in templates/data_templates/input/ for examples of
 from pathlib import Path
 import pandas as pd
 
-import mongo_config
-
 class FileInputError(Exception):
     def __init__(self, *args):
         if args:
