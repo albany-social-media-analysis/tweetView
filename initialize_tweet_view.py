@@ -33,16 +33,20 @@ except pymongo_errors.OperationFailure:
     pass
 
 # create a default system admin user (for dummy use and other cases)
-tv_admin_db.command("createUser", mongo_config.tv_admin, pwd=mongo_config.tv_admin_pwd,
-                    roles=[{"role": "TV_tool_admin", "db": "admin"}])
-# create and insert document into user collection for the default user
-# the assignments field will be an array object that list a project and
-# role that a user has for each project they are assigned to
-default_doc = {
-    "FIRST NAME": "TV_default_admin",
-    "LAST NAME": "TV_default_admin",
-    "USER": "TV_default_admin",
-    "CONTACT EMAIL": "TV_default_admin",
-    "ASSIGNMENTS": [{"PROJECT_NAME": "ALL", "ROLE": "TOOL ADMIN"}]
-}
-tv_users.insert_one(default_doc)
+try:
+    tv_admin_db.command("createUser", mongo_config.tv_admin, pwd=mongo_config.tv_admin_pwd,
+                        roles=[{"role": "TV_tool_admin", "db": "admin"}])
+    # create and insert document into user collection for the default user
+    # the assignments field will be an array object that list a project and
+    # role that a user has for each project they are assigned to
+    default_doc = {
+        "FIRST NAME": "TV_default_admin",
+        "LAST NAME": "TV_default_admin",
+        "USER": "TV_default_admin",
+        "CONTACT EMAIL": "TV_default_admin",
+        "ASSIGNMENTS": [{"PROJECT_NAME": "ALL", "ROLE": "TOOL ADMIN"}]
+    }
+    tv_users.insert_one(default_doc)
+except pymongo_errors.OperationFailure:
+    print("Tool Admin user already exists. Moving on.")
+    pass
