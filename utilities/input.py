@@ -1,6 +1,8 @@
 from pymongo import MongoClient
 from pathlib import Path
 import mongo_config
+from csv import DictReader
+import pandas as pd
 
 
 def input_data_to_master_data(db_login, user_name_login, pwd_login, project_name, data_file_path):
@@ -20,7 +22,6 @@ def input_data_to_master_data(db_login, user_name_login, pwd_login, project_name
 
                 if data_file_path.suffix == '.csv':
                     with open(data_file_path, 'r') as csv_file:
-                        from csv import DictReader
                         dataset_reader = DictReader(csv_file)
                         master_data = [dict(row) for row in dataset_reader]
                     md_collection = [authorized_client[project_name]['MASTER'].insert_one(doc) for doc in master_data]
@@ -29,7 +30,6 @@ def input_data_to_master_data(db_login, user_name_login, pwd_login, project_name
                     return approved_message
 
                 elif data_file_path.suffix == '.json':
-                    import pandas as pd
                     try:
                         json_file = pd.read_json(data_file_path, orient='records')
                     except ValueError:
@@ -42,7 +42,6 @@ def input_data_to_master_data(db_login, user_name_login, pwd_login, project_name
                     return approved_message
 
                 elif data_file_path.suffix == '.txt':
-                    import pandas as pd
                     txt_file = pd.read_fwf(data_file_path)
                     rows = txt_file.iterrows()
                     master_data = [dict(row.__next_()[1]) for row in rows]
