@@ -1,12 +1,14 @@
 from pymongo import MongoClient
+import pymongo.errors
 from pathlib import Path
 import mongo_config
+from utilities.input_from_file import read_data_from_file as read_data
 
 
 # Come up with a way to login into a database that has just been created by project lead
 # Add checks to see if user status is authorized to do so in this database then give access to default admin
 def initialize_new_project(project_name, project_lead_user_name):
-    default_client = MongoClient('TV_ADMIN', username=mongo_config.tv_admin, password=mongo_config.tv_admin_pwd,
+    default_client = MongoClient(authsource='TV_ADMIN', username=mongo_config.tv_admin, password=mongo_config.tv_admin_pwd,
                                  port=mongo_config.port)
     tv_username_list = default_client.TV_ADMIN.command('userInfo')['users']
     tv_username_list = [userinfo['user'] for userinfo in tv_username_list]
@@ -48,3 +50,25 @@ def initialize_new_project(project_name, project_lead_user_name):
         denied_message = 'This user does not exist, enter a user name that is already registered'
         return denied_message, None, None, None
 
+def insert_master_data(project_name, input_data_file):
+    default_client = MongoClient(authsource='TV_ADMIN', username=mongo_config.tv_admin, password=mongo_config.tv_admin_pwd,
+                                 port=mongo_config.port)
+    project_db = default_client[project_name]
+    existing_project_collections = project_db.list_collection_names()
+    if not 'masterData' in existing_project_collections:
+        master_data_collection = project_db.create_collection('masterData')
+    else:
+        master_data_collection = project_db['masterData']
+    input_data = read_data(input_data_file)
+    try:
+        insert_results = master_data_collection.insert_many(input_data)
+        return insert_results
+    except pymongo.errors.BulkWriteError as e:
+        """
+        We need to build exception handling for a variety of Mongo related errors.
+        This particular exception is raised when input_data already exists in the master_data_collection.
+        We don't want this to just fail. tweetView should be smart enough to see this, check to see if it's because the
+         data is already in the db, then keep going if that's the case.
+        """
+        insert_results = e
+        return insert_results
