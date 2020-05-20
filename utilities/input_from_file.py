@@ -3,7 +3,8 @@ To build master data collections, tweetView reads in specified data from a file.
 File types supported: txt, csv, json
 See input data template files in templates/data_templates/input/ for examples of how to structure input data
 
-master_data is a list of tweet ids with "ID_" prepended to each
+master_data is a list of dicts, where each dict is 1 tweet id
+ - [{"tweet_ids": "ID_897123984723"}, {"tweet_ids": "ID_172340198234"}] # (fake tweet ids used here)
 """
 
 
@@ -32,10 +33,12 @@ def read_data_from_file(data_file_path):
         if data_file_path.suffix == '.csv':
             master_data = pd.read_csv(data_file_path)
             if type(master_data) == pd.core.frame.DataFrame:
-                column_name = master_data.columns[0]
-                master_data = master_data[column_name].to_list()
+                master_data = master_data.to_dict(orient='records')
             elif type(master_data) == pd.core.series.Series:
-                master_data = master_data.index.to_list()
+                master_data = master_data.reset_index()
+                master_data.drop(columns=[0], inplace=True)
+                master_data.rename({'index': 'tweet_ids'}, axis='columns', inplace=True)
+                master_data = master_data.to_dict(orient='records')
 
             return master_data
 
@@ -49,10 +52,12 @@ def read_data_from_file(data_file_path):
                     master_data = pd.read_json(data_file_path, lines=True) # This expects one json object per line. Corresponds to input_data_template3.json
 
             if type(master_data) == pd.core.frame.DataFrame:
-                column_name = master_data.columns[0]
-                master_data = master_data[column_name].to_list()
+                master_data = master_data.to_dict(orient='records')
             elif type(master_data) == pd.core.series.Series:
-                master_data = master_data.index.to_list()
+                master_data = master_data.reset_index()
+                master_data.drop(columns=[0], inplace=True)
+                master_data.rename({'index': 'tweet_ids'}, axis='columns', inplace=True)
+                master_data = master_data.to_dict(orient='records')
 
             return master_data
 
@@ -62,10 +67,12 @@ def read_data_from_file(data_file_path):
                 master_data = pd.read_csv(data_file_path, names=['tweet_ids']) # This expects a txt file with no header row. Corresponds to input_data_template2.txt
 
             if type(master_data) == pd.core.frame.DataFrame:
-                column_name = master_data.columns[0]
-                master_data = master_data[column_name].to_list()
+                master_data = master_data.to_dict(orient='records')
             elif type(master_data) == pd.core.series.Series:
-                master_data = master_data.index.to_list()
+                master_data = master_data.reset_index()
+                master_data.drop(columns=[0], inplace=True)
+                master_data.rename({'index': 'tweet_ids'}, axis='columns', inplace=True)
+                master_data = master_data.to_dict(orient='records')
 
             return master_data
 
