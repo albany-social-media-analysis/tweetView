@@ -6,7 +6,7 @@ import mongo_config
 # Come up with a way to login into a database that has just been created by project lead
 # Add checks to see if user status is authorized to do so in this database then give access to default admin
 def initialize_new_project(project_name, project_lead_user_name):
-    default_client = MongoClient('TV_ADMIN', username=mongo_config.tv_admin, password=mongo_config.tv_admin_pwd,
+    default_client = MongoClient(authsource='TV_ADMIN', username=mongo_config.tv_admin, password=mongo_config.tv_admin_pwd,
                                  port=mongo_config.port)
     tv_username_list = default_client.TV_ADMIN.command('userInfo')['users']
     tv_username_list = [userinfo['user'] for userinfo in tv_username_list]
@@ -41,7 +41,7 @@ def initialize_new_project(project_name, project_lead_user_name):
                                         roles=[{"role": "Project Lead", "db": project_name}])
         approved_message = project_name, "successfully created with", project_lead_user_name, "the lead"
         approved_message_2 = project_lead_user_name + "'s contact doc has been updated in admin database"
-        approved_message_3 = project_lead_user_name + "'s information has been added to", project_name,"'s " \
+        approved_message_3 = project_lead_user_name + "'s information has been added to", project_name, "'s " \
                                                       "contact collection"
         return approved_message, approved_message_2, approved_message_3, pj_lead_contact_doc
     else:

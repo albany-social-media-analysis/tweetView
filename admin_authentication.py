@@ -185,7 +185,8 @@ class TVAdminAuthorizedCreationControls:
             contact_col = new_db['Contact']
             contact_col.insert_one(contact_doc)
             approved_message = db_name, "database has been created\n" + default_contact_username, "Contact has been " \
-                               "uploaded to", db_name, "database"
+                                        "uploaded to", db_name, "database"
+            return approved_message
         else:
             denied_message = "This database name is already in use"
             return denied_message

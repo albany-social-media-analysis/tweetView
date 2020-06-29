@@ -64,6 +64,5 @@ def input_data_to_master_data(db_login, user_name_login, pwd_login, project_name
             return denied_message
 
     else:
-
         denied_message = "The project name you entered does not exist"
         return denied_message
