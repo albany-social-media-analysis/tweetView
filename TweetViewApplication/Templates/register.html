@@ -1,0 +1,43 @@
+{% extends "includes/loginBase.html" %}
+
+{% block contents %}
+
+<div class="text-center jumbotron">
+  <h1>TweetView Account Registration </h1>
+</div>
+<div class="text-center">
+    <h5>Register for TweetView by filling in the fields</h5>
+</div>
+
+<div class="container">
+  {% from "includes/_formhelpers.html" import render_field %}
+  <form action="{{ url_for('login') }}">
+      {{ form.hidden_tag() }}
+    <div class="form-group">
+      {{ render_field(form.first_name, class_ ='form-control', placeholder= "Name") }}
+    </div>
+    <div class="form-group">
+      {{ render_field(form.last_name, class_ ='form-control', placeholder="Surname") }}
+    </div>
+    <div class="form-group">
+      {{ render_field(form.new_register_user_name, class_ ='form-control') }}
+    </div>
+    <div class="form-group">
+      {{ render_field(form.new_register_pass_word, class_ ='form-control') }}
+    </div>
+    <div class="form-group">
+      {{ render_field(form.confirm, class_ ='form-control') }}
+    </div>
+    <div class="form-group">
+      {{ render_field(form.email, class_ ='form-control', placeholder="Mymail@example.com") }}
+    </div>
+    <div class="form-group">
+      {{ render_field(form.role, class_ ='form-control') }}
+    </div>
+    <div class="form-group">
+      {{ render_field(form.submit, class_ ='btn btn-primary') }}
+    </div>
+  </form>
+</div>
+
+{% endblock %}

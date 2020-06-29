@@ -1,0 +1,19 @@
+{% extends "includes/loginBase.html" %}
+
+{% block contents %}
+<div class="jumbotron text-center container">
+  <h1>Welcome to TweetView</h1>
+  <p class="lead">This Application is a data management tool designed accurately
+    labeling Twitter feed</p>
+</div>
+{% from "includes/_formhelpers.html" import render_field %}
+<div class="text-center">
+    <form class="form-group" action="" method="Post">
+      {{ render_field(form.user_name) }}<br>
+      {{ render_field(form.pass_word) }}<br>
+      {{ render_field(form.login, class_="btn btn-primary") }} <a href="{{url_for('register')}}"> Register </a> <br>
+      <a href="{{ url_for('retreive_creds') }}">Forgot your user name or password?</a>
+    </form>
+</div>
+
+{% endblock %}
