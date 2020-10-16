@@ -1,0 +1,43 @@
+{% extends "includes/base.html" %}
+
+{% block contents %}
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul class=flashes>
+        {% for alert in messages %}
+              <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+                {{ alert }}
+              </div>
+        {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+
+<div class="jumbotron text-center container">
+  <h1>Tweet View</h1>
+  <div align="center">
+    <h3>{{ session['user_name'] }}'s workload</h3>
+    <p>Projects assigned: {{ sum }}</p>
+    <p>something 3</p>
+
+  </div>
+  {% for project in g.user_projects %}
+  <div class="card">
+    <h5 class="card-header">{{ project['PROJECT_NAME'] }}</h5>
+    <div class="card-body">
+      <h5 class="card-title">Role: {{project['ROLE']}}</h5>
+      <p></p>
+      <div class="progress">
+        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: 75%"></div>
+      </div>
+    </div>
+  </div>
+  <br>
+  {% endfor %}
+  <a href="#">Logout</a>
+</div>
+{% endblock %}

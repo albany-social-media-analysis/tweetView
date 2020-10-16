@@ -1,0 +1,59 @@
+{% extends "includes/base.html" %}
+{% block contents %}
+{% from "includes/_formhelpers.html" import render_field %}
+
+{% if option not in ['usr', 'pwd', 'contact', 'pj_request'] %}
+  <div class="jumbotron text-center container">
+    <h1>Tweet View</h1>
+    <div align="center">
+      <h2>{{ session['user_name'] }} Account Settings: Select an Option</h2>
+      <h4>Manage your account by selecting one of the three options</h4>
+      <form class="form-group" method="Post" action="{{ url_for('user_account', user=session['user']) }}">
+        {{ render_field(form.account_option, class_="form-control") }}
+        {{ form.submit(class_="btn btn-primary") }}
+      </form>
+    </div>
+  </div>
+{% else %}
+    {% if option == 'usr' %}
+    <div class="jumbotron text-center container">
+      <h1>Tweet View</h1>
+      <div align="center">
+        <h2>{{ session['user_name'] }} Account Settings</h2>
+        <h4>Enter in a new user user name</h4>
+        <form class="form-group" method="Post" action="{{ url_for('user_account', user=session['user']) }}">
+          {{ render_field(form.changed_user_name, class_="form-control") }}
+          {{ form.submit(class_="btn btn-primary") }}
+        </form>
+      </div>
+    </div>
+    {% elif option == 'pwd' %}
+    <div class="jumbotron text-center container">
+      <h1>Tweet View</h1>
+      <div align="center">
+        <h2>{{ session['user_name'] }} Account Settings</h2>
+        <h4>Fill out and submit the form to change your account Password</h4>
+        <form class="form-group" method="Post" action="{{ url_for('user_account', user=session['user']) }}">
+          {{ render_field(form.old_pass_word, class_="form-control") }}
+          {{ render_field(form.changed_pass_word, class_="form-control") }}
+          {{ render_field(form.confirmed_changed_pass_word, class_="form-control") }}
+          {{ form.submit(class_="btn btn-primary") }}
+        </form>
+      </div>
+    </div>
+    {% elif option == 'contact' %}
+    <div class="jumbotron text-center container">
+      <h1>Tweet View</h1>
+      <div align="center">
+        <h2>{{ session['user_name'] }} Account Settings</h2>
+        <h4>Enter an new email to associate with your TweetView Account</h4>
+        <form class="form-group" method="Post" action="{{ url_for('user_account', user=session['user']) }}">
+          {{ render_field(form.new_contact, class_="form-control") }}
+          {{ form.submit(class_="btn btn-primary") }}
+        </form>
+      </div>
+    </div>
+    {% elif option == 'pj_request' %}
+    {% endif %}
+{% endif %}
+{% endblock %}
