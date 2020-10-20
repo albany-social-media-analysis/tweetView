@@ -15,6 +15,7 @@ collection1_name = 'schema_test_1'
 db.create_collection(collection1_name)
 '''
 """
+# TO SET VALIDATION
 db.command( {
    "collMod": "schema_test_1",
    "validator": { "$jsonSchema": {
@@ -40,6 +41,9 @@ db.command( {
    "validationLevel": "strict",
    "validationAction": "error"
 } )
+
+# TO REMOVE VALIDATION
+db.command({"collMod": "schema_test_1", "validator": {}, "validationLevel": "off"})
 """
 
 class DataValidationTypeError(Exception):
@@ -75,19 +79,22 @@ class DataValidation:
    """
    Each object created from this class is a single field (i.e., a label) along with the possible options for the
     value for that field.
+
+   This needs to be redesigned to match the structure of validator objects for the different types expected by Mongo.
+     See https://docs.mongodb.com/manual/reference/operator/query/jsonSchema/
    """
 
    def __init__(self, field_name, field_type):
       self.name = field_name
       field_type_options = ['int', 'enum', 'bool', 'str']
       if field_type in field_type_options:
-         self.type = field_type
+         self.bsonType = field_type
       elif not field_type in field_type_options:
          raise TypeError('Invalid field data type provided. Field data type options are int, enum, bool, and str.')
-      data_type = self.type
+      data_type = self.bsonType
       if data_type == 'int':
-         self.min = None
-         self.max = None
+         self.minimum = None
+         self.maximum = None
          options_description = "Users will be able to choose any integer between the minimum and maximum value."
       elif data_type == 'enum':
          self.options = []
@@ -98,19 +105,19 @@ class DataValidation:
          options_description = "True and False will be the only options for this field."
       elif data_type == 'str':
          options_description = "Users will be able to input text for this field with no restrictions."
-      self.type_description = options_description
+      self.description = options_description
 
    def set_options(self, **kwargs):
-      if self.type == 'int':
+      if self.bsonType == 'int':
          min_value = kwargs['min_value']
          max_value = kwargs['max_value']
-         if (type(min) == int and type(max) == int):
-            self.min_value = min_value
-            self.max_value = max_value
+         if (type(min_value) == int and type(max_value) == int):
+            self.minimum = min_value
+            self.maximum = max_value
          else:
             raise DataValidationValueError("For int field, either the min or max value wasn't an integer.")
 
-      elif self.type == 'enum':
+      elif self.bsonType == 'enum':
          options = kwargs['options']
          if type(options) == list:
             if len(options) <= 1:
