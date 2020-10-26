@@ -1,0 +1,16 @@
+<!-- use if statement to return this page with different messages -->
+{% extends "includes/loginBase.html" %}
+
+{% block contents %}
+  <div class="jumbotron text-center container">
+    <h1>Request received</h1>
+    <p class="lead">The request for your sign in information has been receieved</p>
+    <p class="lead">Check your email for your sign credential information </p>
+
+    <div class="text-center">
+      <a href="{{url_for('login')}}"> return to login page</a>
+    </div>
+
+  </div>
+
+{% endblock %}
