@@ -7,7 +7,7 @@ from admin_authentication import TVAdminAuthorizedCreationControls
 from pymongo import MongoClient
 from flask import (Flask, render_template, request, redirect, url_for, session,
                    logging, flash, g)
-from appForms import UserLoginForm, UserRegisterForm, CredentialRetreival, ChangeLoginInfo
+from appForms import UserLoginForm, UserRegisterForm, CredentialRetreival, ChangeLoginInfo, AssignUserButton
 
 # Connect to database
 Client =  MongoClient(host = mongo_config.host, port = mongo_config.port,
@@ -158,9 +158,9 @@ def register():
 @app.route('/login', methods=['POST','GET'])
 def login():
     loginForm = UserLoginForm()
-
+    # May have to move back
+    session.pop('user', None)
     if request.method == 'POST':
-        session.pop('user', None)
         try:
             # This block validates password & user name
             current_user = MongoClient(host = mongo_config.host,
@@ -179,58 +179,62 @@ def login():
 
             return redirect(url_for('landing_page', user=session['user']))
 
-    return render_template('login.html',form=loginForm)
+    return render_template('login.html', form=loginForm)
 
-@app.route('/home/<user>', methods=['POST','GET'])
+
+@app.route('/home/<user>', methods=['POST', 'GET'])
 def landing_page(user):
+
+    assignForm = AssignUserButton()
+
     total_projects = len(g.user_projects)
-    return render_template('landing_page.html', sum=total_projects)
+    # Get all project that user is a lead for
+    list_lead_of_projects = [project['PROJECT_NAME'] for project in g.user_projects if project['ROLE'] == 'Project Lead']
+    # Get all users in database
+    open_analyst_candidates = []
+    for user in controls.system_user_list:
+        for user_doc in DB.USERS.find():
+            # Cross check user name
+            if (user == user_doc['USER']) & (user != g.user) & (user != 'TV_default_admin'):
+                if len(user_doc['ASSIGNMENTS']) >= 1:
+                    for assigned_project_doc in user_doc['ASSIGNMENTS']:
+                        if (assigned_project_doc['ROLE'] != 'Project Lead') & (assigned_project_doc['PROJECT_NAME'] not in list_lead_of_projects):
+                           open_analyst_candidates.append({
+                               'user': user,
+                               'assignments': len(USERS.find_one({'USER': user})['ASSIGNMENTS'])
+                           })
+                else:
+                    open_analyst_candidates.append({
+                        'user': user,
+                        'assignments': 'No Projects Currently Assigned'
+                    })
 
-@app.route('/<user>/account', methods=['POST','GET'])
-def user_account(user):
-    AccountForm = ChangeLoginInfo()
-    option = AccountForm.account_option.data
+    # Check if the current user is a lead and if there are any possible candidates
+    if len(list_lead_of_projects) > 0:
+        is_a_lead = True
+    if len(open_analyst_candidates) > 0:
+        has_possible_candidates = True
 
-    if AccountForm.account_option.data == 'usr':
-        new_usr_name = request.args.get('usr')
-        user_name_exists = new_usr_name in controls.system_user_list
-        if user_name_exists:
-            # return to this same page indicating that this user name already exits
-            flash("The User Name:", new_usr_name ,"already exists")
-        else:
-            old_user_name = g.user
-            print(g.user)
-            print(session['user'])
-            print(old_user_name)
-            print(new_usr_name)
-            USERS.update_one({"USER": g.user},
-            {"$set": {"USER": new_usr_name}})
-            session['user'] = new_usr_name
-            flash(str("User Name has been updated from:" + old_user_name + "to" + session['user']))
-            return redirect(url_for('landing_page',user=session['user']))
+    # check which button was selected to submit
+    if request.method == 'POST':
+        #print(request.args.get('user_name_id'))
+        print(request.form['user_name_id'])
+        #print(assignForm)
+        #if assignForm.Force_Assign_Analyst.data:
+            #selected_user = request.form.get('Force_Assign_Analyst')
+            #flash(mongo_config.force_assigned_message)
+         #   return render_template('landing_page.html', sum=total_projects, request_candidates=open_analyst_candidates, is_a_lead=is_a_lead, has_possible_candidates=has_possible_candidates, form=assignForm)
 
-    elif AccountForm.account_option.data == 'pwd':
-        # find out how to change pwd on mongo
-        pass
+        #elif assignForm.Notify_Analyst.data:
+            #selected_user = request.form.get('Notify_Analyst')
+            #flash(mongo_config.notify_message)
+        #    return render_template('landing_page.html', sum=total_projects, request_candidates=open_analyst_candidates, is_a_lead=is_a_lead, has_possible_candidates=has_possible_candidates, form=assignForm)
 
-    elif AccountForm.account_option.data == 'contact':
-        new_contact = request.args.get('contact')
-        # check User name
-        #query email from user name
-        # update email adress
-        # redirect with flash message
+    return render_template('landing_page.html', sum=total_projects, request_candidates=open_analyst_candidates, is_a_lead=is_a_lead, has_possible_candidates=has_possible_candidates, form=assignForm)
 
-    elif AccountForm.account_option.data == 'pj_request':
-        # step 1: collect all projects in the database
-        #step 2: After the user selects a designated project to be assigned to query for the project lead of the project
-        #step 3: automate email to project lead
-        #step 4: notify user that a request has been sent out
-        pass
-
-    return render_template('account_manager.html',form=AccountForm, option=option)
 
 # NOT to be confused with any individual project dashboard
-@app.route('/<user>/projects', methods=['POST','GET'])
+@app.route('/<user>/projects', methods=['POST', 'GET'])
 def user_dashboard(user):
     if not g.user:
         return redirect(url_for('login'))

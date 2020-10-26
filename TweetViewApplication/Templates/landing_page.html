@@ -20,9 +20,9 @@
 <div class="jumbotron text-center container">
   <h1>Tweet View</h1>
   <div align="center">
-    <h3>{{ session['user_name'] }}'s workload</h3>
+    <h3>{{ g.user }}'s workload</h3>
     <p>Projects assigned: {{ sum }}</p>
-    <p>something 3</p>
+    <p>something informative about the user's assignments 3</p>
 
   </div>
   {% for project in g.user_projects %}
@@ -40,4 +40,29 @@
   {% endfor %}
   <a href="#">Logout</a>
 </div>
+
+{% if is_a_lead and has_possible_candidates %}
+    {% from "includes/_formhelpers.html" import render_field %}
+    <div class="jumbotron text-center container">
+        <h1>Request an Analyst</h1>
+        <h3>Here is a list of available analysts you can assign to a your current projects</h3>
+        <div align="center">
+            {% for candidate in request_candidates %}
+                <div class="card">
+                    <div class="card-body">
+                     <p><b>Candidate Name:</b> {{ candidate['user'] }}</p>
+                     <b>Total amount of projects assigned:</b> {{ candidate['assignments'] }}
+                    </div>
+                    <div class="card-footer text-muted">
+                        <form class="form-group" method="Post"name='username' value={{ candidate['user'] }} id="form" user_id={{ candidate['user'] }}>
+                            {{ form.select_analyst() }}
+                            {{ form.user_name_id(object=candidate['user'],value=candidate['user']) }}
+                            {{ form.submit_request() }}
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endif %}
 {% endblock %}

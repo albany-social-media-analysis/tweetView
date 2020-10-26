@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import (StringField,BooleanField,DateTimeField,RadioField,
                     SelectField,TextField,TextAreaField,SubmitField,
-                    PasswordField)
+                    PasswordField, HiddenField)
 from wtforms.validators import DataRequired, Optional, length, EqualTo
 
 class UserLoginForm(FlaskForm):
@@ -48,3 +48,11 @@ class ChangeLoginInfo(FlaskForm):
     confirmed_changed_pass_word = PasswordField()
     new_contact = StringField('Enter a new E-Mail Adress')
     submit = SubmitField()
+
+class AssignUserButton(FlaskForm):
+    # This class will only hold a button form for when a Project Lead needs to assign a new analyst
+    # This could also be used for another purpose down the line for a similar circumstance
+    submit_request = SubmitField()
+    select_analyst = SelectField(choices=[('force', 'Force Assign Analyst'), ('notify', 'Notify Analyst')])
+    user_name_id = HiddenField()
+    #Notify_Analyst = SubmitField()
