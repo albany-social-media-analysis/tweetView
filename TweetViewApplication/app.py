@@ -1,6 +1,7 @@
 import sys
 sys.path.append("../")
 import mongo_config
+from assign_analyst import add_analyst_to_project
 import smtplib
 from email.mime.text import MIMEText as text
 from admin_authentication import TVAdminAuthorizedCreationControls
@@ -215,22 +216,66 @@ def landing_page(user):
     if len(open_analyst_candidates) > 0:
         has_possible_candidates = True
 
+
     # check which button was selected to submit
     if request.method == 'POST':
-        #print(request.args.get('user_name_id'))
-        print(request.form['user_name_id'])
-        #print(assignForm)
-        #if assignForm.Force_Assign_Analyst.data:
-            #selected_user = request.form.get('Force_Assign_Analyst')
-            #flash(mongo_config.force_assigned_message)
-         #   return render_template('landing_page.html', sum=total_projects, request_candidates=open_analyst_candidates, is_a_lead=is_a_lead, has_possible_candidates=has_possible_candidates, form=assignForm)
+        if assignForm.request_type.data == 'force':
 
-        #elif assignForm.Notify_Analyst.data:
-            #selected_user = request.form.get('Notify_Analyst')
-            #flash(mongo_config.notify_message)
-        #    return render_template('landing_page.html', sum=total_projects, request_candidates=open_analyst_candidates, is_a_lead=is_a_lead, has_possible_candidates=has_possible_candidates, form=assignForm)
+            # Get key information for task
+            selected_analyst = request.form['analyst']
+            selected_project = request.form['selected_project']
+            lead_email = USERS.find_one({"USER": g.user})['CONTACT EMAIL']
+            # get proper flash and email message
+            assigned_message, assign_email = mongo_config.generate_assignment_message(selected_analyst, True,
+                                                                              selected_project, g.user, lead_email)
+            # Assign user
+            role, doc = add_analyst_to_project(selected_analyst, selected_project)
+            # Construct Email
+            message = text(assign_email)
+            message['Subject'] = selected_project + ": Project Assignment Notification"
+            message['From'] = mongo_config.tv_email
+            message['To'] = USERS.find_one({"USER": selected_analyst})['CONTACT EMAIL']
+            # Send assignment email to selected user
+            server = smtplib.SMTP(mongo_config.tv_email_server, port=mongo_config.tv_email_port)
+            server.starttls()  # start server
+            server.login(mongo_config.tv_email,
+                         mongo_config.tv_email_pwd)
+            server.sendmail(message['From'], message['To'], message.as_string())
+            server.quit()
+            # redirect to landing page with flash message
+            flash(selected_analyst + ": " + role)
+            flash(doc)
+            flash(assigned_message)
+            return redirect(url_for('landing_page', user=session['user']))
 
-    return render_template('landing_page.html', sum=total_projects, request_candidates=open_analyst_candidates, is_a_lead=is_a_lead, has_possible_candidates=has_possible_candidates, form=assignForm)
+        elif assignForm.request_type.data == 'notify':
+
+            # Get key information for task
+            selected_analyst = request.form['analyst']
+            selected_project = request.form['selected_project']
+            lead_email = USERS.find_one({"USER": g.user})['CONTACT EMAIL']
+            # get proper flash and email message
+            notify_message, notify_email = mongo_config.generate_assignment_message(selected_analyst, False,
+                                                                                      selected_project, g.user,
+                                                                                      lead_email)
+            # Construct Email
+            message = text(notify_email)
+            message['Subject'] = selected_project + ": Project Inquiry Notification"
+            message['From'] = mongo_config.tv_email
+            message['To'] = USERS.find_one({"USER": selected_analyst})['CONTACT EMAIL']
+            # Send assignment email to selected user
+            server = smtplib.SMTP(mongo_config.tv_email_server, port=mongo_config.tv_email_port)
+            server.starttls()  # start server
+            server.login(mongo_config.tv_email,
+                         mongo_config.tv_email_pwd)
+            server.sendmail(message['From'], message['To'], message.as_string())
+            server.quit()
+            # redirect to landing page with flash message
+            flash(notify_message)
+            return redirect(url_for('landing_page', user=session['user']))
+
+    return render_template('landing_page.html', sum=total_projects, request_candidates=open_analyst_candidates,
+                           is_a_lead=is_a_lead, has_possible_candidates=has_possible_candidates, form=assignForm)
 
 
 # NOT to be confused with any individual project dashboard
