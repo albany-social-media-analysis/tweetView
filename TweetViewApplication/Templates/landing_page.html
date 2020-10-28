@@ -42,9 +42,10 @@
 </div>
 
 {% if is_a_lead and has_possible_candidates %}
-    {% from "includes/_formhelpers.html" import render_field %}
+    {% for project in g.user_projects %}
     <div class="jumbotron text-center container">
-        <h1>Request an Analyst</h1>
+        <h1>{{ project['PROJECT_NAME'] }}</h1>
+        <h2>Request an Analyst</h2>
         <h3>Here is a list of available analysts you can assign to a your current projects</h3>
         <div align="center">
             {% for candidate in request_candidates %}
@@ -54,15 +55,19 @@
                      <b>Total amount of projects assigned:</b> {{ candidate['assignments'] }}
                     </div>
                     <div class="card-footer text-muted">
-                        <form class="form-group" method="Post"name='username' value={{ candidate['user'] }} id="form" user_id={{ candidate['user'] }}>
-                            {{ form.select_analyst() }}
-                            {{ form.user_name_id(object=candidate['user'],value=candidate['user']) }}
-                            {{ form.submit_request() }}
+                        <form class="form-group" method="Post" id={{ candidate['user'] }}>
+                            {% for type in form.request_type %}
+                                {{ type }} {{ type.label }} <br>
+                            {% endfor %}
+                            {{ form.analyst(object=candidate['user'], value=candidate['user']) }}
+                            {{ form.selected_project(object=project['PROJECT_NAME'], value=project['PROJECT_NAME']) }}
+                            {{ form.submit_request(class_="btn btn-info") }}
                         </form>
                     </div>
                 </div>
             {% endfor %}
         </div>
     </div>
+    {% endfor %}
 {% endif %}
 {% endblock %}

@@ -53,6 +53,6 @@ class AssignUserButton(FlaskForm):
     # This class will only hold a button form for when a Project Lead needs to assign a new analyst
     # This could also be used for another purpose down the line for a similar circumstance
     submit_request = SubmitField()
-    select_analyst = SelectField(choices=[('force', 'Force Assign Analyst'), ('notify', 'Notify Analyst')])
-    user_name_id = HiddenField()
-    #Notify_Analyst = SubmitField()
+    request_type = RadioField(choices=[('force', 'Force Assign This Analyst'), ('notify', 'Notify This Analyst')])
+    analyst = HiddenField()
+    selected_project = HiddenField()

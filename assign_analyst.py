@@ -29,7 +29,8 @@ class ProjectNotFound(Exception):
 
 def add_analyst_to_project(username, project_name):
     admin_client = MongoClient(authSource='TV_ADMIN', username=mongo_config.tv_admin,
-                               password=mongo_config.tv_admin_pwd, port=mongo_config.port)
+                               password=mongo_config.tv_admin_pwd, port=mongo_config.port,
+                               host=mongo_config.host)
 
     ## Confirm that user exists
     user_object = admin_client['TV_ADMIN']['USERS'].find_one({'USER': username})
@@ -38,7 +39,7 @@ def add_analyst_to_project(username, project_name):
 
     ## Confirm that project exists
     system_dbs = admin_client.list_database_names()
-    system_dbs = [db['name'] for db in system_dbs]
+    system_dbs = [db for db in system_dbs]
     if not project_name in system_dbs:
         raise ProjectNotFound("Specified project does not exist")
 
