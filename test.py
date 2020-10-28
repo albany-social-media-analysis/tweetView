@@ -45,3 +45,14 @@ client.testingMay19['PROJECT_INFO'].update_one({"Summary": "This is the summary 
 #print(client.test_db2['PROJECT_INFO'].find()[0]['lead'][0])
 #print(client.test_db2['test_data'].find_one())
 #print(db.USERS.find_one({'USER': 'TestUser20'}))
+'''
+db.USERS.update_one({"USER": "testusr"},
+                {"$set": {"ASSIGNMENTS":
+                         [{"ROLE": "Project Lead",
+                         "PROJECT_NAME": "test_db2"},
+                         {"ROLE": "Project Analyst",
+                         "PROJECT_NAME": "testingMay19"}]}})
+print(db.USERS.find({"USER": "testusr"})[0])'''
+
+#db.USERS.update_one({"USER": None},{"$set": {"USER": "testusr"}})
+#print(db.USERS.find({"USER": None})[0]['ASSIGNMENTS'])
