@@ -44,7 +44,8 @@ def add_analyst_to_project(username, project_name):
         raise ProjectNotFound("Specified project does not exist")
 
     ## Add project role to user object
-    assign_role = admin_client['TV_ADMIN'].command("grantRolesToUser", username, roles=[{"role": "Project Analyst", "db": project_name}])
+    admin_client['TV_ADMIN'].command("grantRolesToUser", username, roles=[{"role": "Project Analyst", "db": project_name}])
+    assign_role = "Project Analyst"
 
     ## Add project and role to user doc in TV_ADMIN.USERS
     current_assignments = user_object['ASSIGNMENTS']
