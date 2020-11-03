@@ -25,7 +25,7 @@ print(db.USERS.find({"USER": "testusr"})[0])'''
 #db.USERS.update_one({"USER": None},{"$set": {"USER": "testusr"}})
 #print(db.USERS.find({"USER": None})[0]['ASSIGNMENTS'])
 #print(client.list_database_names())
-
+'''
 client.test_db2['PROJECT_INFO'].update_one({"Summary": "This is the summary of the current project you selected"},
     {'$set': {"lead": ["testusr"],
     "Summary": "This is the summary of the current project you selected",
@@ -39,8 +39,31 @@ client.testingMay19['PROJECT_INFO'].update_one({"Summary": "This is the summary 
     "Assigned": ['testusr', 'random user', 'random user 2'],
     "Scheme":  'https://docs.google.com/document/d/1mmiBYlAQSDOWqGdtIGyjZZcwJwZ29y00uySTRD3JDrk/edit'
 }})
+'''
+'''
+client.test_db2.command(
+            "createRole",
+            "Project Lead",
+            privileges=[],
+            roles=["dbOwner", "dbAdmin"])
+client.test_db2.command(
+            "createRole",
+            "Project Analyst",
+            privileges=[],
+            roles=["readWrite"])
 
-
+client.testingMay19.command(
+            "createRole",
+            "Project Lead",
+            privileges=[],
+            roles=["dbOwner", "dbAdmin"])
+client.testingMay19.command(
+            "createRole",
+            "Project Analyst",
+            privileges=[],
+            roles=["readWrite"])
+'''
+print(list(db.USERS.find({'USER': 'TestUser20'})))
 #print(list(db.test_db2.list_collection_names()))
 #print(client.test_db2['PROJECT_INFO'].find()[0]['lead'][0])
 #print(client.test_db2['test_data'].find_one())
