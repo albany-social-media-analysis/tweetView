@@ -243,9 +243,8 @@ def landing_page(user):
             server.sendmail(message['From'], message['To'], message.as_string())
             server.quit()
             # redirect to landing page with flash message
-            flash(selected_analyst + ": " + role)
-            flash(doc)
             flash(assigned_message)
+            flash(selected_analyst + ": " + role)
             return redirect(url_for('landing_page', user=session['user']))
 
         elif assignForm.request_type.data == 'notify':
