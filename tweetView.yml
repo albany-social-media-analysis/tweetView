@@ -1,0 +1,33 @@
+name: TweetView
+channels:
+  - defaults
+dependencies:
+  - ca-certificates=2020.10.14=0
+  - certifi=2020.6.20=pyhd3eb1b0_3
+  - click=7.1.2=py_0
+  - flask=1.1.2=py_0
+  - flask-wtf=0.14.3=py_0
+  - itsdangerous=1.1.0=py_0
+  - jinja2=2.11.2=py_0
+  - libcxx=10.0.0=1
+  - libedit=3.1.20191231=h1de35cc_1
+  - libffi=3.3=hb1e8313_2
+  - markupsafe=1.1.1=py38h1de35cc_1
+  - ncurses=6.2=h0a44026_1
+  - openssl=1.1.1h=haf1e3a3_0
+  - pip=20.2.4=py38_0
+  - pymongo=3.11.0=py38hb1e8313_0
+  - python=3.8.5=h26836e1_1
+  - python-dateutil=2.8.1=py_0
+  - readline=8.0=h1de35cc_0
+  - setuptools=50.3.0=py38hecd8cb5_1
+  - six=1.15.0=py_0
+  - sqlite=3.33.0=hffcf06c_0
+  - tk=8.6.10=hb0a8c7a_0
+  - werkzeug=1.0.1=py_0
+  - wheel=0.35.1=py_0
+  - wtforms=2.3.3=py_0
+  - xz=5.2.5=h1de35cc_0
+  - zlib=1.2.11=h1de35cc_3
+prefix: /Users/vol.tron/Documents/anaconda3/envs/TweetView
+
