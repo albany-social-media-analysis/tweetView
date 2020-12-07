@@ -1,0 +1,76 @@
+{% macro display_tweet_and_validation_form(tweet_html_obj, validation_obj, dead) %}
+
+    <script>window.twttr = (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0],
+        t = window.twttr || {};
+      if (d.getElementById(id)) return t;
+      js = d.createElement(s);
+      js.id = id;
+      js.src = "https://platform.twitter.com/widgets.js";
+      fjs.parentNode.insertBefore(js, fjs);
+
+      t._e = [];
+      t.ready = function(f) {
+        t._e.push(f);
+      };
+
+      return t;
+    }(document, "script", "twitter-wjs"));</script>
+    {% if dead %}
+        <p>{{ tweet_html_obj }}</p>
+        <form method="POST">
+              <input class="btn btn-primary" type="submit" name="Tweet HTML Action" value="NEXT">
+          </form>
+    {% else %}
+        <div class='container-fluid'>
+            <div class="row justify-content-center align-items-center" id="tweet-container">
+                {{ tweet_html_obj['tweet_html'] | safe}}
+            </div>
+
+            <div class="row align-items-center ">
+                <div class="col-sm-12">
+                    {% if validation_obj %}
+                        <form id={{ tweet_html_obj['tweet_id'] }} method="POST">
+                            {% for label, option in validation_obj.items() %}
+                                <div class='row'>
+
+                                    {% if option.keys()|length > 0 %}
+                                        {% if 'enum' in  option.keys() %}
+                                            <p> Description: {{ option['description'] }}</p>
+                                            <p>{{ label }}: </p>
+                                            {% for radio_option in option['enum']  %}
+                                                <input type="radio" id={{ radio_option }} name="{{ label }}" value={{ radio_option }} required/>
+                                                <label for={{ radio_option }}>{{ radio_option }}</label>
+                                            {% endfor %}
+
+                                        {% else %}
+                                            {% if option['bsonType'] == 'int' %}
+                                                <p>Description: {{ option['description'] }}</p>
+                                                <label for=quantity> {{ label }} </label>
+                                                <input type="number" id="quantity" name="{{ label }}" min={{ option['minimum'] }} max={{ option['maximum'] }} required/>
+                                            {% elif option['bsonType'] == 'bool'%}
+                                                <p>{{ label }}</p>
+                                                <input type="radio" id="True" name="{{ label }}" value="True" required/>
+                                                <label for="True">True</label>
+                                                <input type="radio" id="False" name="{{ label }}" value="False"/>
+                                                <label for="False">False</label>
+                                            {% endif %}
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                            <!-- may have to move to rendering html -->
+                            {% if session['current tweet index'] > 0 %}
+                                <input type='submit' class='btn btn-primary' name="Tweet HTML Action" value="PREVIOUS">
+                            {% endif %}
+                            <input type='submit' class='btn btn-primary' name="Tweet HTML Action" value="SUBMIT">
+                            <input type='submit' class='btn btn-primary' name="Tweet HTML Action" value="SKIP">
+                        </form>
+                    {% else %}
+                        <p> There is no validation schema requirements </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% endmacro %}

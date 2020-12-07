@@ -41,7 +41,10 @@
             {% endfor %}
           </div>
           <a class="btn btn-primary btn-lg" href="{{ url_for('modify', project=project) }}" role="button">Modify</a>
-          <a class="btn btn-primary btn-lg" href="#" role="button">Assist in Labeling</a>
+          <form method="POST">
+              <input class="btn btn-primary btn-lg" type="submit" name="start_labeling" value="Assist in Labeling">
+          </form>
+
         </div>
     </div>
 {% else %}
@@ -57,12 +60,11 @@
                       <h5>Contact: {{ details['contact info'][lead] }}</h5>
         {% endfor %}
         <h5><a href="{{ details['scheme'] }}">Labeling Scheme</a></h5>
-        <a class="btn btn-primary btn-lg" href="#" role="button">Begin Labeling</a>
+        <form method="POST">
+              <input class="btn btn-primary btn-lg" type="submit" name="start_labeling" value="Begin Labeling"/>
+          </form>
       </div>
 </div>
 {% endif %}
-
-
-
 
 {% endblock %}

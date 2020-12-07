@@ -1,6 +1,8 @@
 import sys
 sys.path.append("../")
+from pprint import pprint
 import mongo_config
+from mongo_config import get_tweet_html
 from assign_analyst import add_analyst_to_project
 import smtplib
 from email.mime.text import MIMEText as text
@@ -230,6 +232,25 @@ def landing_page(user):
                                                                               selected_project, g.user, lead_email)
             # Assign user
             role, doc = add_analyst_to_project(selected_analyst, selected_project)
+            # create a query collection for the selected user by transferring project data to the new collection
+            # NOTE: it's best to have data in a project master data collection before assigning new users to a project
+            # This block will check if there is any data in the selected project's collection before creating a query collection
+            # CHANGE TEST_DATA TO MASTER
+            if 'test_data' in Client[selected_project].list_collection_names():
+                # check if the there is any data in the collection
+                if Client[selected_project]['test_data'].count_documents() > 0:
+                    # add all docs into new collection
+                    user_query_collection = selected_analyst + '_' + 'query'
+                    Client[selected_project][user_query_collection].insert_many(
+                        list(Client[selected_project]['test_data'].find())
+                    )
+                else:
+                    # have a flash message or email project lead that no query doc was created for user since there is no data in master data
+                    pass
+            else:
+                # email the project lead that master data has not been initialized
+                pass
+
             # Construct Email
             message = text(assign_email)
             message['Subject'] = selected_project + ": Project Assignment Notification"
@@ -285,26 +306,149 @@ def user_dashboard(user):
     else:
         return render_template('projects.html', Client=Client)
 
+
 @app.route('/<user>/projects/<project>', methods=['POST','GET'])
 def project_dashboard(user, project):
     project = project
+    session['selected project'] = project
 
     leads = Client[project]['PROJECT_INFO'].find_one()['lead']
     lead_contact_dict = {}
     [lead_contact_dict.update({lead_name : USERS.find_one({'USER' : lead_name})['CONTACT EMAIL']}) for lead_name in leads]
     # throw all information collected into dictionary
     project_details = {
-        'current user role' : [assignment['ROLE'] for assignment in USERS.find_one({'USER' : g.user})['ASSIGNMENTS'] if assignment['PROJECT_NAME'] == project][0],
-        'project leads' :  Client[project]['PROJECT_INFO'].find_one()['lead'],
-        'contact info' : lead_contact_dict,
+        'current user role': [assignment['ROLE'] for assignment in USERS.find_one({'USER' : g.user})['ASSIGNMENTS'] if assignment['PROJECT_NAME'] == project][0],
+        'project leads':  Client[project]['PROJECT_INFO'].find_one()['lead'],
+        'contact info': lead_contact_dict,
         'analysts': Client[project]['PROJECT_INFO'].find_one()['Assigned'],
-        'summary' : Client[project]['PROJECT_INFO'].find_one()['Summary'],
-        'scheme' : Client[project]['PROJECT_INFO'].find_one()['Scheme'],
-        'total' : Client[project]['test_data'].count(), # Change test_data collection call to data before deployment
+        'summary': Client[project]['PROJECT_INFO'].find_one()['Summary'],
+        'scheme': Client[project]['PROJECT_INFO'].find_one()['Scheme'],
+        'total': Client[project]['test_data'].count(), # Change test_data collection call to data before deployment
         'completion_rate': None # Must consult dr.J for how labeling completed tweets
     }
+    if request.method == 'POST':
+        if request.form['start_labeling'] == "Assist in Labeling" or request.form['start_labeling'] == "Begin Labeling":
+            # check if there is a validation Schema
+            project_db = Client[project]
+            project_collections_info_list = project_db.command('listCollections')['cursor']['firstBatch']
+            # rename the collection where the tweet data is stored to simply data instead of test_data
+            labeled_data_col_info = [collection_info for collection_info in project_collections_info_list if
+                                     collection_info['name'] == 'test_data'][0]
+            if 'validator' in labeled_data_col_info['options'].keys():
+                session['project_labels'] = labeled_data_col_info['options']['validator']['$jsonSchema']['properties']
+                if not Client[project].test_data.count_documents({}) > 0:
+                    # return something to HTML notifying user there is no documents uploaded to this project
+                    return redirect(url_for('label_project_data', project=session['selected project'], user=g.user))
+                else:
+                    # check if there is a query collection for user
+                    if g.user + '_' + 'query' not in Client[project].list_collection_names():
+                        # add all docs into new collection
+                        user_query_collection = g.user + '_' + 'query'
+                        Client[project][user_query_collection].insert_many(
+                            list(Client[project]['test_data'].find())
+                        )
+                    else:
+                        user_query_collection = g.user + '_' + 'query'
+
+                    session['batch limit'] = 10
+                    session['skip count'] = 0
+                    session['remainder amount'] = Client[project][user_query_collection].count_documents({}) % session['batch limit']
+                    session['complete batches amount'] = int(Client[project][user_query_collection].count_documents({}) / session['batch limit'])
+                    session['batch iteration'] = 1
+                    # add conditions to only find tweets that have not been labeled yet
+                    id_str = list(Client[project][user_query_collection].find({}, {"id_str": 1}).skip(session['skip count']).limit(session['batch limit']))
+                    session['current batch'] = [doc['id_str'] for doc in id_str]
+                    session['current tweet index'] = 0
+                    session['on final batch'] = False
+                    return redirect(url_for('label_project_data', project=session['selected project'], user=g.user))
+            else:
+                # return a message stating that the project has not been set up requiring validation and return later or inform project lead
+                return redirect(url_for('label_project_data', project=session['selected project'], user=g.user))
 
     return render_template('project_dash.html', project=project, details=project_details)
+
+# fix form to assist labeling
+
+# if there are arguement rendering problems, throw neccesaary ones into sessions
+@app.route('/LabelProject/<user>/<project>', methods=['POST', 'GET'])
+def label_project_data(user, project):
+    user_query_collection = g.user + '_' + 'query'
+    user_labeled_collection = g.user + '_' + 'labeled_data'
+    # Switch to root user
+    root_client = MongoClient(host=mongo_config.host, port=mongo_config.port,
+                              username=mongo_config.user, password=mongo_config.pwd)
+
+    print(session['current tweet index'])
+    print(session['batch iteration'])
+    # make API query from Twitter, make sure to yield the next few tweets instead of returning
+    if not session['on final batch']:
+        if session['current tweet index'] > 9:
+            # adjust batch iteration
+            session['batch iteration'] += 1
+
+            # check if the complete batch amount has been reached
+            if session['batch iteration'] == session['complete batches amount']:
+                # get the final batch
+                id_str = list(Client[project][user_query_collection].find({}, {"id_str": 1}).skip(session['skip count']).limit(session['remainder amount']))
+                final_batch = [doc['id_str'] for doc in id_str]
+                session['current batch'] = final_batch
+                session['on final batch'] = True
+
+            else:
+                # adjust skip size and reset iteration
+                session['skip count'] += 10
+                session['current tweet index'] = 0
+                # get a new batch and reset index count
+                id_str = list(Client[project][user_query_collection].find({}, {"id_str": 1}).skip(session['skip count']).limit(session['batch limit']))
+                session['current batch'] = [doc['id_str'] for doc in id_str]
+        elif (session['current tweet index'] == 9) and (session['on final batch'] == False):
+            flash('WARNING: THIS IS THE FINAL ATTACHMENT OF THE CURRENT BATCH'\
+                  'MAKE SURE YOU DATA IS PROPERLY LABELED BEFORE CONTINUING TO THE NEXT BATCH'\
+                  'ONCE "NEXT" IS SELECTED, YOU WILL BE UNABLE TO REVIEW THE PREVIOUS BATCH OF DATA', 'warning')
+
+    elif (session['on final batch']) and (session['current tweet index'] == session['remainder amount']):
+        # return a html stating the project's data has been fully completed
+        return render_template('ProjectLabeling.html', user=user, project=project)
+
+    tweet_obj, tweet_id, is_deprecated = get_tweet_html(session['current batch'][session['current tweet index']])
+
+    if request.method == 'POST':
+        if request.form['Tweet HTML Action'] == 'SUBMIT':
+            # Collect labeled information
+            labeled_doc = {
+                'tweet_id': 'ID_' + tweet_obj['tweet_id'],
+                'labels': {}
+            }
+            for label in session['project_labels'].keys():
+                labeled_doc['labels'][label] = request.form[label]
+            # submit labeled doc into user's labeled data collection
+            root_client[project][user_labeled_collection].insert_one(labeled_doc)
+
+            # logic for handling tweet batches
+            session['current tweet index'] += 1
+            # Get the next tweet
+            return redirect(url_for('label_project_data', user=g.user, project=project))
+
+        elif request.form['Tweet HTML Action'] == 'NEXT':
+            session['current tweet index'] += 1
+
+            return redirect(url_for('label_project_data', user=g.user, project=project))
+
+        elif request.form['Tweet HTML Action'] == 'SKIP':
+            session['current tweet index'] += 1
+
+            return redirect(url_for('label_project_data', user=g.user, project=project))
+
+        elif request.form['Tweet HTML Action'] == 'PREVIOUS':
+            if not session['current tweet index'] == 0:
+                session['current tweet index'] -= 1
+
+            return redirect(url_for('label_project_data', user=g.user, project=project))
+
+
+    return render_template('ProjectLabeling.html', project=session['selected project'], user=g.user,
+                           tweet_html_obj=tweet_obj, validation_obj=session['project_labels'],
+                           dead=is_deprecated)
 
 @app.route('/<project>/modify', methods=['POST', 'GET'])
 def modify(project):
