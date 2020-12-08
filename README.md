@@ -47,21 +47,29 @@ There can only be one TweetView admin per TweetView system interface. The TweetV
     
         •		Assist in initializing TweetView system
         
-        •	  Grant project lead role to a user
+        •	    Grant project lead role to a user
         
         •		Provide new database for a requested project 
         
 #### Project lead
 The project lead role is a managerial responsibility for a given project. Where the admin role governs all projects, a project lead governs one (or multiple) specific projects that a user is assigned to. The project lead sole purpose is to provide maintenance and guidance for a given project. This can be done by adding to a project’s scope, sending emails to project analysts, keeping track of progress, or assist in labeling data.
       •		Role’s primary use cases: 
+      
           •		Start a new project
+          
           •		Assign project analyst to a project
+          
           •		Upload datasets
+          
           •		Provide validation schema for projects
+          
           •		Label data
-•	Project analyst
+          
+#### Project analyst
+
 The sole purpose of a project analyst is to provide labels to the respective data based off the project’s validation schema provided by the project lead.
       •		Role’s primary use case: 
+      
           •		Provide labels to data based off validation schema
 
 ## Setting up new projects
