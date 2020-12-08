@@ -355,6 +355,7 @@ def project_dashboard(user, project):
                     session['remainder amount'] = Client[project][user_query_collection].count_documents({}) % session['batch limit']
                     session['complete batches amount'] = int(Client[project][user_query_collection].count_documents({}) / session['batch limit'])
                     session['batch iteration'] = 1
+                    session['deletion_batch'] = []
                     # add conditions to only find tweets that have not been labeled yet
                     id_str = list(Client[project][user_query_collection].find({}, {"id_str": 1}).skip(session['skip count']).limit(session['batch limit']))
                     session['current batch'] = [doc['id_str'] for doc in id_str]
@@ -367,9 +368,7 @@ def project_dashboard(user, project):
 
     return render_template('project_dash.html', project=project, details=project_details)
 
-# fix form to assist labeling
 
-# if there are arguement rendering problems, throw neccesaary ones into sessions
 @app.route('/LabelProject/<user>/<project>', methods=['POST', 'GET'])
 def label_project_data(user, project):
     user_query_collection = g.user + '_' + 'query'
@@ -401,12 +400,24 @@ def label_project_data(user, project):
                 # get a new batch and reset index count
                 id_str = list(Client[project][user_query_collection].find({}, {"id_str": 1}).skip(session['skip count']).limit(session['batch limit']))
                 session['current batch'] = [doc['id_str'] for doc in id_str]
+                # delete all tweets from teh previous batch
+                for tweet_id in session['deletion_batch']:
+                    tweet_id = 'ID_' + tweet_id
+                    Client[project][user_query_collection].remove({'tweet_id': tweet_id})
+                # create an empty list for another use
+                session['deletion_batch'] = []
         elif (session['current tweet index'] == 9) and (session['on final batch'] == False):
             flash('WARNING: THIS IS THE FINAL ATTACHMENT OF THE CURRENT BATCH'\
                   'MAKE SURE YOU DATA IS PROPERLY LABELED BEFORE CONTINUING TO THE NEXT BATCH'\
                   'ONCE "NEXT" IS SELECTED, YOU WILL BE UNABLE TO REVIEW THE PREVIOUS BATCH OF DATA', 'warning')
 
     elif (session['on final batch']) and (session['current tweet index'] == session['remainder amount']):
+        # delete all tweets from teh previous batch
+        for tweet_id in session['deletion_batch']:
+            tweet_id = 'ID_' + tweet_id
+            Client[project][user_query_collection].remove({'tweet_id': tweet_id})
+        # create an empty list for another use
+        session['deletion_batch'] = []
         # return a html stating the project's data has been fully completed
         return render_template('ProjectLabeling.html', user=user, project=project)
 
@@ -426,7 +437,8 @@ def label_project_data(user, project):
 
             # logic for handling tweet batches
             session['current tweet index'] += 1
-            # Get the next tweet
+            # add tweet id to list for deletion
+            session['deletion_batch'].apped(tweet_id)
             return redirect(url_for('label_project_data', user=g.user, project=project))
 
         elif request.form['Tweet HTML Action'] == 'NEXT':
@@ -442,7 +454,8 @@ def label_project_data(user, project):
         elif request.form['Tweet HTML Action'] == 'PREVIOUS':
             if not session['current tweet index'] == 0:
                 session['current tweet index'] -= 1
-
+                # remove the previously appended tweet data
+                session['deletion_batch'].pop()
             return redirect(url_for('label_project_data', user=g.user, project=project))
 
 

@@ -19,7 +19,10 @@
     {% if dead %}
         <p>{{ tweet_html_obj }}</p>
         <form method="POST">
-              <input class="btn btn-primary" type="submit" name="Tweet HTML Action" value="NEXT">
+            {% if session['current tweet index'] > 0 %}
+                <input type='submit' class='btn btn-primary' name="Tweet HTML Action" value="PREVIOUS">
+            {% endif %}
+            <input class="btn btn-primary" type="submit" name="Tweet HTML Action" value="NEXT">
           </form>
     {% else %}
         <div class='container-fluid'>
