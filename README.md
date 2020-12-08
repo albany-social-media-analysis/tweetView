@@ -8,11 +8,17 @@ TweetView is built using the Flask website framework and uses MongoDB on the bac
 
 At a minimum, in order to use TweetView, you should: 
 •	Have a private email account
+
 •	Access to a computer and stable internet connectivity 
+
 •	Basic computer and web browsing literacy 
+
 •	Rudimentary Knowledge of data and file management 
+
 At a maximum: 
+
 •	Comfortably able using MongoDB command line tool
+
 •	Comfortably able to use and perform various terminal commands 
 
 
@@ -34,24 +40,29 @@ NOTE: the password provided must be at least 7 characters in length and must con
 
 ## Tweet view roles
 
-•	TweetView Admin 
+#### TweetView Admin 
+
 There can only be one TweetView admin per TweetView system interface. The TweetView Admin role functions as any other admin system where the user has privileges to do anything across all projects (databases) in the TweetView interface. The TweetView Admin is the only role that has read/write privileges on all project and can override project leads. Though this role has many functionalities, it can only be accessed through the back via the command line tool, mainly used to do most of the initialization tasks when a TweetView interface system is initially set up.
-o	Role’s primary use cases:
-	Assist in initializing TweetView system
-	Grant project lead role to a user
-	Provide new database for a requested project 
-•	Project lead
+    •	Role’s primary use cases:
+    
+        •		Assist in initializing TweetView system
+        
+        •	  Grant project lead role to a user
+        
+        •		Provide new database for a requested project 
+        
+#### Project lead
 The project lead role is a managerial responsibility for a given project. Where the admin role governs all projects, a project lead governs one (or multiple) specific projects that a user is assigned to. The project lead sole purpose is to provide maintenance and guidance for a given project. This can be done by adding to a project’s scope, sending emails to project analysts, keeping track of progress, or assist in labeling data.
-o	Role’s primary use cases: 
-	Start a new project
-	Assign project analyst to a project
-	Upload datasets
-	Provide validation schema for projects
-	Label data
+      •		Role’s primary use cases: 
+          •		Start a new project
+          •		Assign project analyst to a project
+          •		Upload datasets
+          •		Provide validation schema for projects
+          •		Label data
 •	Project analyst
 The sole purpose of a project analyst is to provide labels to the respective data based off the project’s validation schema provided by the project lead.
-o	Role’s primary use case: 
-	Provide labels to data based off validation schema
+      •		Role’s primary use case: 
+          •		Provide labels to data based off validation schema
 
 ## Setting up new projects
 
