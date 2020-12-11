@@ -1,0 +1,29 @@
+{% extends "includes/base.html" %}
+{% block contents %}
+{% from "render_tweets.html" import display_tweet_and_validation_form %}
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+<ul class=flashes>
+    {% for alert in messages %}
+          <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+            {{ alert }}
+          </div>
+    {% endfor %}
+</ul>
+{% endif %}
+
+{% endwith %}
+    {% if tweet_html_obj %}
+        {% if validation_obj %}
+            {{ display_tweet_and_validation_form(tweet_html_obj, validation_obj, dead ) }}
+        {% else %}
+            <p>There is no validation for this project</p>
+        {% endif %}
+    {% else %}
+        <p>There is no tweets for this project</p>
+    {% endif %}
+
+{% endblock %}

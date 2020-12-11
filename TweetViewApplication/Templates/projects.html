@@ -1,0 +1,58 @@
+{% extends "includes/base.html" %}
+
+{% block contents %}
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul class=flashes>
+        {% for alert in messages %}
+              <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+                {{ alert }}
+              </div>
+        {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+
+<div class="text-center jumbotron">
+  <h1>Current Projects</h1>
+  <div align="center"class="row row-cols-1 row-cols-md-3">
+      {% for project in g.user_projects %}
+        {% if Client[project["PROJECT_NAME"]]['PROJECT_INFO']['lead'] == session['user'] %}
+          <div class="col mb-4">
+              <div class="card h-100" style="width: 18rem;">
+                  <img src="static/icon.png" class="card-img-top" alt="...">
+                  <div class="card-body">
+                      <h5 class="card-title">{{ project["PROJECT_NAME"] }}</h5>
+                      <p class="card-text">Role: {{ project["ROLE"] }}</p>
+                      <p class="card-text">Project Lead: {{ Client[project['PROJECT_NAME']]['PROJECT_INFO'].find()[0]['lead'][0] }}</p>
+                      <p class="card-text">Date Created: </p>
+                      <p class="card-text">Completion Rate: </p>
+                      <a href="{{ url_for('project_dashboard', user=g.user, project=project['PROJECT_NAME']) }}" class="btn btn-primary">Go</a><a href="{{ url_for('modify', project=project['PROJECT_NAME']) }}" class="btn btn-primary">Modify</a>
+                  </div>
+              </div>
+          </div>
+        {% else %}
+          <div class="col mb-4">
+              <div class="card h-100" style="width: 18rem;">
+                  <img src="static/icon.png" class="card-img-top" alt="...">
+                  <div class="card-body">
+                      <h5 class="card-title">{{ project["PROJECT_NAME"] }}</h5>
+                      <p class="card-text">Role: {{ project["ROLE"] }}</p>
+                      <p class="card-text">Project Lead: {{ Client[project['PROJECT_NAME']]['PROJECT_INFO'].find()[0]['lead'][0] }}</p>
+                      <p class="card-text">Date Created: </p>
+                      <p class="card-text">Completion Rate: </p>
+                      <a href="{{ url_for('project_dashboard', user=g.user, project=project['PROJECT_NAME']) }}" class="btn btn-primary">Go</a>
+                  </div>
+              </div>
+          </div>
+        {% endif %}
+
+
+      {% endfor %}
+  </div>
+</div>
+{% endblock %}

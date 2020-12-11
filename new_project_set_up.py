@@ -43,7 +43,7 @@ def initialize_new_project(project_name, project_lead_user_name):
                                         roles=[{"role": "Project Lead", "db": project_name}])
         approved_message = project_name, "successfully created with", project_lead_user_name, "the lead"
         approved_message_2 = project_lead_user_name + "'s contact doc has been updated in admin database"
-        approved_message_3 = project_lead_user_name + "'s information has been added to", project_name,"'s " \
+        approved_message_3 = project_lead_user_name + "'s information has been added to", project_name, "'s " \
                                                       "contact collection"
         return approved_message, approved_message_2, approved_message_3, pj_lead_contact_doc
     else:

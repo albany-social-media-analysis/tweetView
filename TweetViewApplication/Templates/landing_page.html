@@ -1,0 +1,73 @@
+{% extends "includes/base.html" %}
+
+{% block contents %}
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul class=flashes>
+        {% for alert in messages %}
+              <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+                {{ alert }}
+              </div>
+        {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+
+<div class="jumbotron text-center container">
+  <h1>Tweet View</h1>
+  <div align="center">
+    <h3>{{ g.user }}'s workload</h3>
+    <p>Projects assigned: {{ sum }}</p>
+    <p>something informative about the user's assignments 3</p>
+
+  </div>
+  {% for project in g.user_projects %}
+  <div class="card">
+    <h5 class="card-header">{{ project['PROJECT_NAME'] }}</h5>
+    <div class="card-body">
+      <h5 class="card-title">Role: {{project['ROLE']}}</h5>
+      <p></p>
+      <div class="progress">
+        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: 75%"></div>
+      </div>
+    </div>
+  </div>
+  <br>
+  {% endfor %}
+  <a href="#">Logout</a>
+</div>
+
+{% if is_a_lead and has_possible_candidates %}
+    {% for project in g.user_projects %}
+    <div class="jumbotron text-center container">
+        <h1>{{ project['PROJECT_NAME'] }}</h1>
+        <h2>Request an Analyst</h2>
+        <h3>Here is a list of available analysts you can assign to a your current projects</h3>
+        <div align="center">
+            {% for candidate in request_candidates %}
+                <div class="card">
+                    <div class="card-body">
+                     <p><b>Candidate Name:</b> {{ candidate['user'] }}</p>
+                     <b>Total amount of projects assigned:</b> {{ candidate['assignments'] }}
+                    </div>
+                    <div class="card-footer text-muted">
+                        <form class="form-group" method="Post" id={{ candidate['user'] }}>
+                            {% for type in form.request_type %}
+                                {{ type }} {{ type.label }} <br>
+                            {% endfor %}
+                            {{ form.analyst(object=candidate['user'], value=candidate['user']) }}
+                            {{ form.selected_project(object=project['PROJECT_NAME'], value=project['PROJECT_NAME']) }}
+                            {{ form.submit_request(class_="btn btn-info") }}
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+{% endif %}
+{% endblock %}
