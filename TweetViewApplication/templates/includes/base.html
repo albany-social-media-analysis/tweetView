@@ -12,9 +12,9 @@
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
       <a class="navbar-brand" href="{{ url_for('landing_page', user=session['user']) }}">Home Page</a>
       <a class="navbar-brand" href="{{ url_for('user_dashboard', user=session['user']) }}">Projects</a>
-      <a class="navbar-brand" href="#">Project Contacts</a>
-      <a class="navbar-brand" href="#">Settings</a>
-      <a class="navbar-brand" href="#">Logout</a>
+      <!-- <a class="navbar-brand" href="#">Project Contacts</a>
+      <a class="navbar-brand" href="#">Settings</a> -->
+      <a class="navbar-brand" href="{{ url_for('logout') }}">Logout</a>
     </nav>
     {% block contents%}
     {% endblock %}

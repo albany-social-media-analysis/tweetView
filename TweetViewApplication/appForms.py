@@ -29,7 +29,7 @@ class UserRegisterForm(FlaskForm):
 
 class CredentialRetreival(FlaskForm):
 
-    retreival_type = SelectField('What information did you forget?',
+    retrieval_type = SelectField('What information did you forget?',
                      choices=[('usr', 'My user name'), ('pwd', 'My password')])
     forgot_user_name = StringField('User Name', validators=[DataRequired()])
     user_email = StringField('Email', validators=[DataRequired()])

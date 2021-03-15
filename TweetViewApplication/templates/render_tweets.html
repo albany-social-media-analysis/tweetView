@@ -57,6 +57,10 @@
                                                 <label for="True">True</label>
                                                 <input type="radio" id="False" name="{{ label }}" value="False"/>
                                                 <label for="False">False</label>
+                                            {% elif option['bsonType'] == 'string'%}
+                                                <label for="comment">{{ label }}</label>
+                                                <input type="textarea" id="comment" name="{{ label }}" required/>
+
                                             {% endif %}
                                         {% endif %}
                                     {% endif %}

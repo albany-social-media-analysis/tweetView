@@ -1,0 +1,38 @@
+name: base
+channels:
+  - anaconda
+  - defaults
+dependencies:
+  - brotlipy=0.7.0
+  - ca-certificates=2020.10.14
+  - certifi=2020.6.20
+  - cffi=1.14.3
+  - chardet=3.0.4
+  - conda=4.9.2
+  - conda-package-handling=1.7.2
+  - cryptography=3.1.1
+  - idna=2.10
+  - libedit=3.1.20191231
+  - libffi=3.3
+  - libgcc-ng=9.1.0
+  - libstdcxx-ng=9.1.0
+  - ncurses=6.2
+  - openssl=1.1.1h
+  - pycosat=0.6.3
+  - pycparser=2.20
+  - pyopenssl=19.1.0
+  - pysocks=1.7.1
+  - python=3.7.4
+  - readline=7.0
+  - requests=2.24.0
+  - ruamel_yaml=0.15.87
+  - setuptools=50.3.0
+  - six=1.15.0
+  - sqlite=3.33.0
+  - tk=8.6.10
+  - tqdm=4.50.2
+  - urllib3=1.25.11
+  - xz=5.2.5
+  - yaml=0.2.5
+  - zlib=1.2.11
+prefix: /network/rit/lab/jacksonlab/miniconda3

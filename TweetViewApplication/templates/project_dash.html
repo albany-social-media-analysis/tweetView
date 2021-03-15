@@ -40,7 +40,10 @@
                     <h4>Labeled Tweets: </h4>
             {% endfor %}
           </div>
+          <!-- This section is currently commented out but leads to the project modification page -->
+          <!--
           <a class="btn btn-primary btn-lg" href="{{ url_for('modify', project=project) }}" role="button">Modify</a>
+          -->
           <form method="POST">
               <input class="btn btn-primary btn-lg" type="submit" name="start_labeling" value="Assist in Labeling">
           </form>

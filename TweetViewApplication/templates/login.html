@@ -34,9 +34,9 @@
         {{ render_field(form.pass_word, name_="pass_word") }}
       </div>
       <div class="form-group">
-        {{ form.login(class_="btn btn-primary") }} Don't have an account? <a href="{{url_for('register')}}"> Register Here </a> <br>
+        {{ form.login(class_="btn btn-primary") }} Don't have an account? <a href="{{ url_for('register') }}"> Register Here </a> <br>
       <div>
-      <a href="{{ url_for('retreive_creds') }}">Forgot Username/Password?</a>
+      <a href="{{ url_for('retrieve_cred') }}">Forgot Username/Password?</a>
     </form>
 </div>
 

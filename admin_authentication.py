@@ -123,4 +123,10 @@ class TVAdminAuthorizedCreationControls:
             denied_message = "This database name is already in use"
             return denied_message
 
+    def change_user_password(self, user_name, new_password):
+
+        # The pymongo "add_user" command will update user password if user already exist
+        self.tv_admin_db.add_user(user_name, new_password)
+        return 'password change confirmed'
+
     #def tv_admin_db_revoke_role_to_user

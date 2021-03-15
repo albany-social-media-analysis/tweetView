@@ -15,7 +15,7 @@ except pymongo_errors.OperationFailure:
 
 # establish project lead role for the db
 try:
-    tv_admin_db.command("createRole","Project Lead",privileges=[
+    tv_admin_db.command("createRole", "Project Lead",privileges=[
             {"resource": {"db": "TV_ADMIN", "collection": ""},
              "actions": ["createUser", "dropUser", "grantRole", "changePassword",
                          "revokeRole", "viewUser", "update", "insert"]}],

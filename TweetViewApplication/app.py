@@ -6,6 +6,7 @@ from mongo_config import get_tweet_html
 from assign_analyst import add_analyst_to_project
 import smtplib
 from email.mime.text import MIMEText as text
+import gmail_controller
 from admin_authentication import TVAdminAuthorizedCreationControls
 from pymongo import MongoClient
 from flask import (Flask, render_template, request, redirect, url_for, session,
@@ -35,127 +36,180 @@ def before_request():
         g.user = session['user']
         g.user_projects = session['assignemnts']
 
-@app.route('/retreivecredentials', methods=['POST','GET'])
-def retreive_creds():
+@app.route('/retrievecredentials', methods=['POST','GET'])
+def retrieve_cred():
+
     rememberCredsForm = CredentialRetreival()
 
-    type = rememberCredsForm.retreival_type.data
+    if 'forgot_user_name' in request.form:
+        session['retrieval_data_type'] = 'pwd'
+        session['retrieved_data_user_name'] = (rememberCredsForm.forgot_user_name.data).lower()
+        session['retrieved_data_email'] = (rememberCredsForm.user_email.data).lower()
+        return redirect(url_for('credentialConfirmation'))
+    elif 'user_email' in request.form:
+        session['retrieval_data_type'] = 'usr'
+        session['retrieved_data'] = (rememberCredsForm.user_email.data).lower()
+        return redirect(url_for('credentialConfirmation'))
 
-    if rememberCredsForm.retreival_type.data == 'pwd':
+    return render_template('chooseCredentials.html', form=rememberCredsForm, type=rememberCredsForm.retrieval_type.data)
 
-        forgot_user_name = request.args.get('forgot_user_name')
-        user_name_exists = forgot_user_name in controls.system_user_list
-        if user_name_exists:
-
-            email = DB.USERS.find_one({'USER': forgot_user_name})['CONTACT EMAIL']
-            DB.USERS.command('userInfo')['users']
-
-            #password = # input some pymongo logic to return the password by user_email
-
-            # Breakdown message to be professionally formatted and recognizable through
-            # email delivary OR USE TXT FILE
-            #message = "Hello, your request for your account information was received " + " PassWord: " + password + " Testing email automization "
-
-            server = smtplib.SMTP()
-            server.starttls()
-            server.login() # login, remember to use environmental variables for server
-            server.sendmail(tweetview_mail, email, message)
-            return redirect(url_for('credentialConfirmation'))
-
-        else:
-            # show flash message stating that the credentials entered was not found
-            pass
-    elif rememberCredsForm.retreival_type.data == 'usr':
-
-        user_email = request.args.get('user_email')
-
-        #user_name = # place pymongo logic to match user name by the email used
-        #user_email_exists = user_name_exists[forgot_user_name]['CONTACT EMAIL'] is user_email
-        if user_name_exists :
-
-            message = "Hello, your request for your account information was received " + " User Name: " + user_name + " Testing email automization "
-
-            server = smtplib.SMTP(server, port=port)
-            server.starttls() # start server
-            server.login(tweetview_mail, tweetview_pwd) # login, remember to use environmental variables
-            server.sendmail(tweetview_mail, user_email, message)
-            return redirect(url_for('credentialConfirmation'))
-
-        else:
-            # show a flash message taht the email entered does not exists
-            pass
-
-    return render_template('choosecredentials.html',form=rememberCredsForm,type=type)
-
-
-@app.route('/credentials-received')
+@app.route('/credentials-received', methods=['GET', 'POST'])
 def credentialConfirmation():
     # add checks to see if the user is logged in by using sessions dict instead of plain variables
-    # this will help against someone just using a username in browser to have access USE SEESIONS INSTEAD
-    return render_template("credsconfirmation.html")
+    # this will help against someone just using a username in browser to have access USE SESSIONS INSTEAD
 
-@app.route('/register',methods=['POST','GET'])
+    retrieval_data_type = session['retrieval_data_type']
+    if retrieval_data_type == 'pwd':
+        forgot_user_name = session['retrieved_data_user_name']
+        forgot_user_email = session['retrieved_data_email']
+        user_name_exists = forgot_user_name in controls.system_user_list
+        if user_name_exists:
+            email = DB.USERS.find_one({'USER': forgot_user_name,
+                                       'CONTACT EMAIL': forgot_user_email})
+            if email != None:
+                email = email['CONTACT EMAIL']
+                message = 'We received your request to change your password for you Tweet View account. Please follow click the link provided and ' \
+                          'follow the instructions: icehc1.arcc.albany.edu:2020:/credentials-received/' + forgot_user_name + '/reset-password'
+
+                message = gmail_controller.create_message(mongo_config.tv_email, email, "Password Reset",
+                                                          message)
+
+                service = gmail_controller.build_service()
+                gmail_controller.send_message(service, mongo_config.tv_email, message)
+
+                g.user = forgot_user_name
+
+                return redirect(url_for('login'))
+
+            else:
+                flash("The credentials you entered does not match any records in Tweet Views database")
+                return redirect(url_for('retrieve_cred'))
+        else:
+            flash("The credentials you entered does not match any records in Tweet Views database")
+            return redirect(url_for('retrieve_cred'))
+
+    elif retrieval_data_type == 'usr':
+
+        user_email = session['retrieved_data']
+        forgotten_name_list = list(USERS.find({'CONTACT EMAIL': user_email}))
+        if len(forgotten_name_list) > 0:
+            if len(forgotten_name_list) > 1:
+                message = "Hello, your request for your account information was received, multiple user names found: "
+                for user_doc in forgotten_name_list:
+                    message = message + ' ' + user_doc['USER'] + '.'
+
+                message = gmail_controller.create_message(mongo_config.tv_email, user_email, "Account Credentials",
+                                                          message)
+
+                service = gmail_controller.build_service()
+                gmail_controller.send_message(service, mongo_config.tv_email, message)
+
+            else:
+                message = "Hello, your request for your account information was received " + " User Name: " + \
+                          forgotten_name_list[0]['USER']
+
+                message = gmail_controller.create_message(mongo_config.tv_email, user_email, 'Account Credentials',
+                                                          message)
+                service = gmail_controller.build_service()
+                gmail_controller.send_message(service, mongo_config.tv_email, message)
+
+        else:
+            # show a flash message that the email entered does not exists
+            flash("The credentials you entered does not match any records in Tweet Views database")
+            return redirect(url_for('retrieve_cred'))
+
+    return render_template('credConfirmation.html')
+
+@app.route('/credentials-received/<user>/reset-password', methods=['POST', 'GET'])
+def reset_password(user):
+    rememberCredsForm = ChangeLoginInfo()
+
+    if request.method == 'POST':
+        errors = False
+        password = request.form.get('changed_pass_word')
+
+        if not any(letter.isdigit() for letter in password):
+            flash(invalid_pwd_num, 'warning')
+            errors = True
+        if len(password) < 7:
+            flash(invalid_pwd_legnth, 'warning')
+            errors = True
+        if not any(letter.isupper() for letter in password):
+            flash(invalid_pwd_caps, 'warning')
+            errors = True
+        if errors:  # redirect user to same page
+            return redirect(url_for('register'))
+        else:
+            report = controls.change_user_password(user, password)
+            session.clear()
+            flash(report)
+            return redirect(url_for('login'))
+
+    return render_template('passwordReset.html', user=g.user, form=rememberCredsForm)
+
+@app.route('/register', methods=['POST','GET'])
 def register():
     registerForm = UserRegisterForm()
 
     errors = False
     invalid_username = "This username is already taken. Please input a different username"
-    invalid_pwd_num = "Password must contain atleast one digit"
+    invalid_pwd_num = "Password must contain at least one digit"
     invalid_pwd_caps = "Password must contain at least one capitalized character"
     invalid_pwd_legnth = "At least 7 characters are required for password"
 
     if request.method == 'POST':
-        if registerForm.validate_on_submit():
-            # Check username input
-            # add checks for empty input
-            if request.form.get('user_name') in controls.system_user_list:
-                invalid_username = controls.create_tv_user(
-                user_name=request.form.get('new_register_user_name'),
-                pwd=request.form.get('new_register_pass_word'),
-                first_name=request.form.get('first_name'),
-                last_name=request.form.get('last_name'),
-                email=request.form.get('email'))
-                flash(invalid_username, 'warning')
-                errors = True
-            # Check password input
-            password = request.form.get('new_register_pass_word')
-            if not any(letter.isdigit() for letter in password):
-                flash(invalid_pwd_num, 'warning')
-                errors = True
-            if len(password) < 7:
-                flash(invalid_pwd_legnth, 'warning')
-                errors = True
-            if not any(letter.isupper() for letter in password):
-                flash(invalid_pwd_caps, 'warning')
-                errors = True
+        # Check username input
+        # add checks for empty input
 
-            if errors: # rediect user to same page
-                return redirect(url_for('register'))
-            else:
-                # Submit new user to TweetView database
-                approved_message = controls.create_tv_user(
-                user_name=request.form.get('new_register_user_name'),
-                pwd=request.form.get('new_register_pass_word'),
-                first_name=request.form.get('first_name'),
-                last_name=request.form.get('last_name'),
-                email=request.form.get('email'))
-                # construct Email message
-                message = text(mongo_config.account_registry_confirmation_message)
-                message['Subject'] = "Account Confirmation"
-                message['From'] = mongo_config.tv_email
-                message['To'] = request.form.get('email')
-                # Send Email confirmation to user
-                server = smtplib.SMTP(mongo_config.tv_email_server, port=mongo_config.tv_email_port)
-                server.starttls()# start server
-                server.login(mongo_config.tv_email,mongo_config.tv_email_pwd)# login, remember to use environmental variables for server
-                server.sendmail(message['From'],message['To'],message.as_string())
-                server.quit()
-                # redirect user to login page with success message
-                flash(approved_message, 'success')
-                return redirect(url_for('login'))
+        if request.form.get('user_name').lower() in controls.system_user_list:
+            invalid_username = controls.create_tv_user(
+            user_name=request.form.get('new_register_user_name').lower(),
+            pwd=request.form.get('new_register_pass_word'),
+            first_name=request.form.get('first_name'),
+            last_name=request.form.get('last_name'),
+            email=request.form.get('email').lower())
+            flash(invalid_username, 'warning')
+            errors = True
+
+        # Check password input
+        password = request.form.get('new_register_pass_word')
+
+        if not any(letter.isdigit() for letter in password):
+            flash(invalid_pwd_num, 'warning')
+            errors = True
+        if len(password) < 7:
+            flash(invalid_pwd_legnth, 'warning')
+            errors = True
+        if not any(letter.isupper() for letter in password):
+            flash(invalid_pwd_caps, 'warning')
+            errors = True
+
+        if errors: # rediect user to same page
+            return redirect(url_for('register'))
+        else:
+
+            # Submit new user to TweetView database
+            approved_message = controls.create_tv_user(
+            user_name=request.form.get('new_register_user_name').lower(),
+            pwd=request.form.get('new_register_pass_word'),
+            first_name=request.form.get('first_name'),
+            last_name=request.form.get('last_name'),
+            email=request.form.get('email').lower())
+
+            # construct Email message
+            message = gmail_controller.create_message(mongo_config.tv_email, request.form.get('email'),
+                                            "Account Confirmation", mongo_config.account_registry_confirmation_message)
+            service = gmail_controller.build_service()
+            gmail_controller.send_message(service, mongo_config.tv_email,
+                                          message)
+
+            # redirect user to login page with success message
+            flash(approved_message, 'success')
+            return redirect(url_for('login'))
                 ################################################
                 #### LASTLY ADD HTML TO RENDER FLASH ALERTS ####
                 ################################################
+
     return render_template('register.html', form=registerForm)
 
 @app.route('/login', methods=['POST','GET'])
@@ -168,14 +222,14 @@ def login():
             # This block validates password & user name
             current_user = MongoClient(host = mongo_config.host,
             port = mongo_config.port, authSource=mongo_config.amdin_database,
-            username = request.form.get('user_name'),
+            username = request.form.get('user_name'), #.lower(), add lower function at completion
             password = request.form.get('pass_word'))
             current_user.list_database_names() # check for any traceback errors
         except:
             flash("Invalid Login Information", "warning")
             return redirect(url_for('login'))
         else:
-            session['user'] = request.form.get('user_name')
+            session['user'] = request.form.get('user_name').lower()
             session['password'] = request.form.get('pass_word')
             session['assignemnts'] = USERS.find({"USER": session['user']})[0]['ASSIGNMENTS']
             flash('Hello ' + session['user'], 'success')
@@ -184,6 +238,10 @@ def login():
 
     return render_template('login.html', form=loginForm)
 
+@app.route('/', methods=['POST', 'GET'])
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
 
 @app.route('/home/<user>', methods=['POST', 'GET'])
 def landing_page(user):
@@ -215,8 +273,13 @@ def landing_page(user):
     # Check if the current user is a lead and if there are any possible candidates
     if len(list_lead_of_projects) > 0:
         is_a_lead = True
+    else:
+        is_a_lead = False
+
     if len(open_analyst_candidates) > 0:
         has_possible_candidates = True
+    else:
+        has_possible_candidates = False
 
 
     # check which button was selected to submit
@@ -324,20 +387,21 @@ def project_dashboard(user, project):
         'summary': Client[project]['PROJECT_INFO'].find_one()['Summary'],
         'scheme': Client[project]['PROJECT_INFO'].find_one()['Scheme'],
         'total': Client[project]['test_data'].count(), # Change test_data collection call to data before deployment
-        'completion_rate': None # Must consult dr.J for how labeling completed tweets
+        'completion_rate': None # Must consult dr.J for how labeling completed tweets will function
     }
     if request.method == 'POST':
         if request.form['start_labeling'] == "Assist in Labeling" or request.form['start_labeling'] == "Begin Labeling":
             # check if there is a validation Schema
             project_db = Client[project]
             project_collections_info_list = project_db.command('listCollections')['cursor']['firstBatch']
-            # rename the collection where the tweet data is stored to simply data instead of test_data
+            # rename the collection where the tweet data is stored to be data (or master data) instead of test_data
             labeled_data_col_info = [collection_info for collection_info in project_collections_info_list if
                                      collection_info['name'] == 'test_data'][0]
             if 'validator' in labeled_data_col_info['options'].keys():
                 session['project_labels'] = labeled_data_col_info['options']['validator']['$jsonSchema']['properties']
                 if not Client[project].test_data.count_documents({}) > 0:
                     # return something to HTML notifying user there is no documents uploaded to this project
+                    flash("There are currently no data uploaded to be label within this project")
                     return redirect(url_for('label_project_data', project=session['selected project'], user=g.user))
                 else:
                     # check if there is a query collection for user
@@ -377,8 +441,6 @@ def label_project_data(user, project):
     root_client = MongoClient(host=mongo_config.host, port=mongo_config.port,
                               username=mongo_config.user, password=mongo_config.pwd)
 
-    print(session['current tweet index'])
-    print(session['batch iteration'])
     # make API query from Twitter, make sure to yield the next few tweets instead of returning
     if not session['on final batch']:
         if session['current tweet index'] > 9:
@@ -400,7 +462,7 @@ def label_project_data(user, project):
                 # get a new batch and reset index count
                 id_str = list(Client[project][user_query_collection].find({}, {"id_str": 1}).skip(session['skip count']).limit(session['batch limit']))
                 session['current batch'] = [doc['id_str'] for doc in id_str]
-                # delete all tweets from teh previous batch
+                # delete all tweets from the previous batch
                 for tweet_id in session['deletion_batch']:
                     tweet_id = 'ID_' + tweet_id
                     Client[project][user_query_collection].remove({'tweet_id': tweet_id})
@@ -422,7 +484,6 @@ def label_project_data(user, project):
         return render_template('ProjectLabeling.html', user=user, project=project)
 
     tweet_obj, tweet_id, is_deprecated = get_tweet_html(session['current batch'][session['current tweet index']])
-
     if request.method == 'POST':
         if request.form['Tweet HTML Action'] == 'SUBMIT':
             # Collect labeled information
@@ -430,25 +491,23 @@ def label_project_data(user, project):
                 'tweet_id': 'ID_' + tweet_obj['tweet_id'],
                 'labels': {}
             }
+            pprint(session['project_labels'])
             for label in session['project_labels'].keys():
                 labeled_doc['labels'][label] = request.form[label]
             # submit labeled doc into user's labeled data collection
             root_client[project][user_labeled_collection].insert_one(labeled_doc)
-
             # logic for handling tweet batches
             session['current tweet index'] += 1
             # add tweet id to list for deletion
-            session['deletion_batch'].apped(tweet_id)
+            session['deletion_batch'].append(tweet_id)
             return redirect(url_for('label_project_data', user=g.user, project=project))
 
         elif request.form['Tweet HTML Action'] == 'NEXT':
             session['current tweet index'] += 1
-
             return redirect(url_for('label_project_data', user=g.user, project=project))
 
         elif request.form['Tweet HTML Action'] == 'SKIP':
             session['current tweet index'] += 1
-
             return redirect(url_for('label_project_data', user=g.user, project=project))
 
         elif request.form['Tweet HTML Action'] == 'PREVIOUS':
