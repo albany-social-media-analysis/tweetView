@@ -1,0 +1,32 @@
+{% extends "includes/base.html" %}
+{% block contents %}
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+  <ul class=flashes>
+      {% for alert in messages %}
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+              {{ alert }}
+            </div>
+      {% endfor %}
+  </ul>
+  {% endif %}
+
+{% endwith %}
+
+<div class="jumbotron text-center container">
+  <h1>Tweet View</h1>
+  <div align="center">
+    <h2>{{ project }} Management Settings</h2>
+    <h4>Manage {{ project }} project by selecting one of the three options</h4>
+    <h5><a href="{{ url_for('analyst_modification', project=project, user=g.user) }}">Manage Analyst</a></h5>
+    <h5><a href="{{ url_for('data_modification', project=project, user=g.user) }}">Manage datasets</a></h5>
+    <h5><a href="{{ url_for('labeling_modification', project=project, user=g.user) }}">Manage Labeling Schema</a></h5>
+  </div>
+</div>
+
+
+{% endblock %}

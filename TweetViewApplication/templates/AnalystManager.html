@@ -1,0 +1,51 @@
+{% extends "includes/base.html" %}
+{% block contents %}
+
+{% from "includes/_formhelpers.html" import render_field %}
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul class=flashes>
+        {% for alert in messages %}
+              <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+                {{ alert }}
+              </div>
+        {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+
+{% if has_possible_candidates %}
+    <div class="jumbotron text-center container">
+        <h1>{{ project }}</h1>
+        <h2>Request an Analyst</h2>
+        <h3>Here is a list of available analysts you can assign to a your project {{ project }}</h3>
+        <div align="center">
+            {% for candidate in request_candidates %}
+                <div class="card">
+                    <div class="card-body">
+                     <p><b>Candidate Name:</b> {{ candidate['user'] }}</p>
+                     <b>Total amount of projects assigned:</b> {{ candidate['assignments'] }}
+                    </div>
+                    <div class="card-footer text-muted">
+                        <form class="form-group" method="Post" id={{ candidate['user'] }}>
+                            {% for type in form.request_type %}
+                                {{ type }} {{ type.label }} <br>
+                            {% endfor %}
+                            {{ form.analyst(object=candidate['user'], value=candidate['user']) }}
+                            {{ form.selected_project(object=project, value=project) }}
+                            {{ form.submit_request(class_="btn btn-info") }}
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% else %}
+    <H1>There are no available candidates to assign to this project</H1>
+{% endif %}
+
+{% endblock %}

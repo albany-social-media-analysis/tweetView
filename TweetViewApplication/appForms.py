@@ -56,3 +56,42 @@ class AssignUserButton(FlaskForm):
     request_type = RadioField(choices=[('force', 'Force Assign This Analyst'), ('notify', 'Notify This Analyst')])
     analyst = HiddenField()
     selected_project = HiddenField()
+
+class ProjectModifyer(FlaskForm):
+
+    data_modification_action = SelectField("How do you want to update the project's database",
+                                           choices=[('upload', 'Upload dataset'), ('delete', 'Delete data'),
+                                                    ('download', 'Download Dataset')])
+    # enum
+    enum_label = StringField('Enter a label for the options field')
+    validator_option_1 = StringField()
+    validator_option_2 = StringField()
+    validator_option_3 = StringField()
+    enum_description = StringField('Enter a description for this field')
+    enum_required = RadioField('Should this field be required for labeling submission',
+                                    choices=[('Required Field', 'required'),
+                                             ('Optional Field', 'optional')])
+
+    # int
+    int_label = StringField('Enter a label for the integer selection field')
+    int_description = StringField('Enter a description for this field')
+    int_required = RadioField('Should this field be required for labeling submission',
+                                    choices=[('Required Field', 'required'),
+                                             ('Optional Field', 'optional')])
+
+    # bool
+    bool_label = StringField('Enter a label for the boolean field')
+    bool_description = StringField('Enter a description for this field')
+    bool_required = RadioField('Should this field be required for labeling submission',
+                                    choices=[('Required Field', 'required'),
+                                             ('Optional Field', 'optional')])
+
+    # text
+    text_label = StringField('Enter a label for the comment field')
+    text_description = StringField('Enter a description for this field')
+    text_required = RadioField('Should this field be required for labeling submission',
+                                    choices=[('Required Field', 'required'),
+                                             ('Optional Field', 'optional')])
+
+
+    submit = SubmitField()

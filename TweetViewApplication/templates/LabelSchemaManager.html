@@ -1,0 +1,92 @@
+{% extends "includes/base.html" %}
+{% block contents %}
+
+{% from "includes/_formhelpers.html" import render_field %}
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul class=flashes>
+        {% for alert in messages %}
+              <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+                {{ alert }}
+              </div>
+        {% endfor %}
+    </ul>
+  {% endif %}
+
+<div class="text-center jumbotron">
+  <h1>{{project}}'s Label Schema Setting </h1>
+</div>
+
+<form method="post" action="{{ url_for('labeling_modification', project=project, user=g.user) }}">
+
+    <div class="text-center">
+        <h3>Fill out the form as deemed fit for the corresponding project's Labeling schema</h3>
+        <h3> All validators are optional. Unselected/edited fields will not be incorporated into project {{project}} labeling schema</h3>
+    </div>
+
+    <div class="container">
+        <!--  enum Field  -->
+        <div class="container">
+            <h5>Radio Field: Create a field and corresponding options for this label (Options will be mutually exclusive when presented for labeling).</h5>
+            <div class="form-group">
+                {{ render_field(form.enum_label, class_ ='form-control', name_='enum_label') }}
+            </div>
+
+            <div class="form-group">
+                {{ render_field(form.validator_option_1, name_='option 1') }}
+                {{ render_field(form.validator_option_2, name_='option 2') }}
+                {{ render_field(form.validator_option_3, name_='option 3') }}
+            </div>
+
+            <div class="form-group">
+                {{ render_field(form.enum_description, class_ ='form-control', name_='enum_description') }} <br>
+            </div>
+
+            <div class="form-group">
+                {{ render_field(form.enum_required, name_='enum_required') }}
+            </div>
+
+        </div>
+
+        <div class="container">
+            <h5>Integer Field: Create a corresponding integer field for this project's labeling</h5>
+
+            {{ render_field(form.int_label, class_ ='form-control', name_='int_label') }}
+
+            <div class="form-group">
+                <input type = "number" placeholder = "Minimum" min = "0" name="min"/>
+                <input type = "number" placeholder = "Maximum" min = "0" name="max"/>
+            </div>
+
+            {{ render_field(form.int_description, class_ ='form-control', name_='int_description') }} <br>
+            {{ render_field(form.int_required, name_='int_required') }}
+        </div>
+
+        <div class="container">
+            <h5>Boolean Field: Create a corresponding Boolean field for this project's tweets</h5>
+            {{ render_field(form.bool_label, class_ ='form-control', name_='bool_label') }}
+            {{ render_field(form.bool_description, class_ ='form-control', name_='bool_description') }} <br>
+            {{ render_field(form.bool_required, name_='bool_required') }}
+        </div>
+
+        <div class="container">
+            <h5>Text Field: Create a corresponding text field for specific comments pertaining to a tweet</h5>
+
+            {{ render_field(form.text_label, class_ ='form-control', name_='text_label') }} <br>
+            {{ render_field(form.text_required, name_='text_required') }}
+        </div>
+
+        {{ render_field(form.submit) }}
+    </div>
+</form>
+
+{% endwith %}
+
+
+
+
+{% endblock %}

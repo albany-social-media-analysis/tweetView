@@ -1,0 +1,70 @@
+{% extends "includes/base.html" %}
+{% block contents %}
+
+{% from "includes/_formhelpers.html" import render_field %}
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul class=flashes>
+        {% for alert in messages %}
+              <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+                {{ alert }}
+              </div>
+        {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+
+<div class="text-center jumbotron" xmlns="http://www.w3.org/1999/html">
+  <h1>{{ project }} Data Configuration </h1>
+</div>
+
+{% if action == 'upload' %}
+    <div class="text-center jumbotron">
+      <h1> Select a file to upload to {{ project }} </h1>
+      <h3> File must be in .csv, .txt, or .json format</h3>
+    </div>
+
+    <form method="post" action="{{ url_for('omni_modifier', project=project, form=form, action=action) }}" enctype=multipart/form-data>
+        <input type="file" name="file"/>
+        {{ render_field(form.submit) }}
+    </form>
+
+{% elif action == 'download' %}
+    <div class="text-center jumbotron">
+      <h1> Select a dataset to download from project {{ project }} </h1>
+    </div>
+
+    {% if files == None %}
+        <p>There are no files in project, {{ project }} to download</p>
+    {% else %}
+
+        <form method="post" action="{{ url_for('omni_modifier', project=project, form=form, action=action) }}">
+            <div>
+
+                <div>
+                    <input type="radio" id="All" value="All" name="file">
+                    <label for="All"> Entire dataset</label>
+                </div>
+
+                    {% for file in files if file != 'All.csv' %}
+                       <div>
+                            <input type="radio" id="{{ file }}" value="{{ file }}" name="file">
+                            <label for="{{ file }}"> {{ file }} </label>
+                        </div>
+                    {% endfor %}
+
+                    <button type="submit">Download</button>
+            </div>
+        </form>
+    {% endif %}
+
+
+{% endif %}
+
+
+{% endblock %}
+

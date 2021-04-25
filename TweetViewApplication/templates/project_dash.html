@@ -33,7 +33,7 @@
           <hr class="my-4">
           <div class="center">
             <h2> Total Tweets in {{ project }}: {{ details['total']}}</h2>
-            <h2> Labled Tweets in {{ project }}: {{ details['completion_rate']}} </h2>
+            <h2> Labeled Tweets in {{ project }}: {{ details['completion_rate']}} </h2>
             {% for analyst in  details['analysts'] %}
                 <h3> Analysts: {{ analyst }} </h3>
                     <h4>Contact: </h4>
@@ -41,9 +41,7 @@
             {% endfor %}
           </div>
           <!-- This section is currently commented out but leads to the project modification page -->
-          <!--
-          <a class="btn btn-primary btn-lg" href="{{ url_for('modify', project=project) }}" role="button">Modify</a>
-          -->
+          <a class="btn btn-primary btn-lg" href="{{ url_for('project_modification', project=project, user=g.user) }}" role="button">Modify</a>
           <form method="POST">
               <input class="btn btn-primary btn-lg" type="submit" name="start_labeling" value="Assist in Labeling">
           </form>

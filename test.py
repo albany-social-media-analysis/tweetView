@@ -2,6 +2,7 @@ import mongo_config
 from admin_authentication import TVAdminAuthorizedCreationControls
 from pymongo import MongoClient
 from pprint import pprint
+from mongo.data_schema_valid import DataValidation
 
 client = MongoClient(host='icehc1.arcc.albany.edu', username=mongo_config.tv_admin,
 password=mongo_config.tv_admin_pwd, port=mongo_config.port, authSource=mongo_config.amdin_database)
@@ -88,13 +89,14 @@ print(db.USERS.find({"USER": "testusr"})[0])'''
 # print(db.USERS.find({"USER": 'samjtest1'})[0]['ASSIGNMENTS'])
 
 
-# msg1 = controls.grant_role_to_user_in_tv_admin_db('SamJTest1', 'test_db2', 'Project Lead')
-# msg2 = controls.grant_role_to_user_in_tv_admin_db('SamJTest1', 'testingMay19', 'Project Analyst')
-#
+# msg1 = controls.grant_role_to_user_in_tv_admin_db('SamJTest2', 'test_db2', 'Project Lead')
+# msg2 = controls.grant_role_to_user_in_tv_admin_db('SamJTest2', 'testingMay19', 'Project Analyst')
 # print('mgs1:' )
 # print(msg1)
 # print('msg2:' )
 # print(msg2)
+
+
 # pprint(db.command('usersInfo')['users'])
 # print(db.command( "updateUser",
 #                     "SamJTest1",
@@ -105,7 +107,7 @@ print(db.USERS.find({"USER": "testusr"})[0])'''
 #     {'$set': {"user": "samjtest1"}}
 # ))
 
-pprint(db.command('usersInfo').find("SamJTest1"))
+# pprint(db.command('usersInfo').find("SamJTest1"))
 # for name in db.command('usersInfo')['users']:
 #     if name['user'] == 'SamJTest1':
 #         pprint(name)
@@ -117,3 +119,8 @@ pprint(db.command('usersInfo').find("SamJTest1"))
 
 # db.updateUser("SamJTest1",
 #               {'user': "SamJTest1".lower()})
+
+# pprint(list(db.USERS.find()))
+
+label = DataValidation('field name', 'int')
+print(label.type)
